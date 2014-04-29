@@ -20,14 +20,13 @@
     <connection>scm:git:git@github.com:gbif/common-search.git</connection>
     <url>https://github.com/gbif/common-search</url>
     <developerConnection>scm:git:git@github.com:gbif/common-search.git</developerConnection>
-    <tag>HEAD</tag>
   </scm>
 
   <properties>
     <gbif-common.version>0.15</gbif-common.version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
-    <commons-lang3.version>3.1</commons-lang3.version>
+    <commons-lang3.version>3.3.1</commons-lang3.version>
     <findbugs-jsr305.version>2.0.0</findbugs-jsr305.version>
     <gbif-api.version>0.12</gbif-api.version>
     <guice.version>3.0</guice.version>
@@ -46,6 +45,16 @@
       <url>http://repository.gbif.org/content/groups/gbif</url>
     </repository>
   </repositories>
+
+  <build>
+    <plugins>
+      <!-- run integration tests (*IT) during verify -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
@@ -140,6 +149,6 @@
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
   </dependencies>
 </project>
