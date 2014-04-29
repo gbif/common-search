@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Extension of {@link SolrSearchService} that implements the {@link org.gbif.api.service.common.SuggestService}.
  * This class is generic implementation that can be re-used for different and more implementations.
- * 
+ *
  * @param <T> Type of request object
  * @param <R> Type of response object
  * @param <P> the search parameter enum
@@ -56,20 +56,18 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
 
   /**
    * Default constructor.
-   * 
+   *
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
-   * @param useEnumValue flag that determines if enum fields should use the enum.name() or the ordinal value
    */
   public SolrSearchSuggestService(SolrServer solrServer, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    boolean useEnumValue) {
-    super(solrServer, searchType, searchSolrType, searchParameterType, primarySortOrder, useEnumValue);
+    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+    super(solrServer, searchType, searchSolrType, searchParameterType, primarySortOrder);
 
     suggestQueryBuilder =
-      SolrQueryBuilder.create(searchParameterType, searchSolrType, useEnumValue).withQueryBuilder(
+      SolrQueryBuilder.create(searchParameterType, searchSolrType).withQueryBuilder(
         SuggestQueryStringBuilder.create(searchSolrType));
   }
 
@@ -77,43 +75,40 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
   /**
    * Constructor for regular search/suggest operations.
    * Doesn't contain the default order for suggest results.
-   * 
+   *
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
-   * @param useEnumValue flag that determines if enum fields should use the enum.name() or the ordinal value
    */
   public SolrSearchSuggestService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    boolean useEnumValue) {
-    super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder, useEnumValue);
+    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+    super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
 
     suggestQueryBuilder =
-      SolrQueryBuilder.create(searchParameterType, searchSolrType, useEnumValue).withRequestHandler(requestHandler)
+      SolrQueryBuilder.create(searchParameterType, searchSolrType).withRequestHandler(requestHandler)
         .withQueryBuilder(SuggestQueryStringBuilder.create(searchSolrType));
   }
 
 
   /**
    * Full constructor.
-   * 
+   *
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    * @param suggestSortOrder ordered fields used for an optional sort order in every suggest operation
-   * @param useEnumValue flag that determines if enum fields should use the enum.name() or the ordinal value
    */
   public SolrSearchSuggestService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> searchType,
     Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    Map<String, SolrQuery.ORDER> suggestSortOrder, boolean useEnumValue) {
-    super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder, useEnumValue);
+    Map<String, SolrQuery.ORDER> suggestSortOrder) {
+    super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
 
     suggestQueryBuilder =
-      SolrQueryBuilder.create(searchParameterType, searchSolrType, useEnumValue).withRequestHandler(requestHandler)
+      SolrQueryBuilder.create(searchParameterType, searchSolrType).withRequestHandler(requestHandler)
         .withQueryBuilder(SuggestQueryStringBuilder.create(searchSolrType)).withPrimarySortOrder(suggestSortOrder);
   }
 

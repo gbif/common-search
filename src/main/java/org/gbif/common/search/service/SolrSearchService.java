@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * the request object values; most of this is implemented by using annotations, enum types and java introspection.
  * All the mapping handling is done by {@link SearchResponseBuilder} and
  * {@link org.gbif.common.search.builder.SolrQueryBuilder}.
- * 
+ *
  * @param <T> the type of the results that the search operation return using a {@link SearchResponse}<T>
  * @param <P> the search parameter enum also used for facets
  */
@@ -67,38 +67,36 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
 
   /**
    * Default constructor.
-   * 
+   *
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param type of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
-   * @param useEnumValue flag that determines if enum fields should use the enum.name() or the ordinal value
    */
   public SolrSearchService(SolrServer solrServer, Class<T> type, Class<ST> solrType,
-    Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder, boolean useEnumValue) {
+    Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
     this.solrServer = solrServer;
     FullTextQueryStringBuilder fullTextQueryBuilder = FullTextQueryStringBuilder.create(solrType);
     responseBuilder = SearchResponseBuilder.create(type, solrType, enumSearchParamType);
     responseBuilder.withHighlightFields(fullTextQueryBuilder.getHighlightedFields());
-    searchQueryBuilder = SolrQueryBuilder.create(enumSearchParamType, solrType, useEnumValue);
+    searchQueryBuilder = SolrQueryBuilder.create(enumSearchParamType, solrType);
     searchQueryBuilder.withQueryBuilder(fullTextQueryBuilder);
     searchQueryBuilder.withPrimarySortOrder(new LinkedHashMap<String, SolrQuery.ORDER>(primarySortOrder));
   }
 
   /**
    * Full constructor.
-   * 
+   *
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param type of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
-   * @param useEnumValue flag that determines if enum fields should use the enum.name() or the ordinal value
    */
   public SolrSearchService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> type,
     Class<ST> solrType,
-    Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder, boolean useEnumValue) {
-    this(solrServer, type, solrType, enumSearchParamType, primarySortOrder, useEnumValue);
+    Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+    this(solrServer, type, solrType, enumSearchParamType, primarySortOrder);
     searchQueryBuilder.withRequestHandler(requestHandler);
   }
 
@@ -106,7 +104,7 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
   /**
    * Issues a SolrQuery and converts the response to a SearchResponse object. Besides, the facets and paging
    * parameter and responses are handled in the request and response objects.
-   * 
+   *
    * @param searchRequest the searchRequest that contains the search parameters
    * @return the SearchResponse of the search operation
    */

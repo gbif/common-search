@@ -95,7 +95,7 @@ public class FullTextQueryStringBuilderTest {
 
   private SolrQuery buildQuery(FacetedSearchRequest<TestSearchParameter> searchRequest) {
     SolrQueryBuilder<TestSearchResult, TestSearchParameter> requestBuilder =
-      SolrQueryBuilder.create(TestSearchParameter.class, TestSearchResult.class, false);
+      SolrQueryBuilder.create(TestSearchParameter.class, TestSearchResult.class);
     requestBuilder.withQueryBuilder(queryStringBuilder);
     return requestBuilder.build(searchRequest);
   }
