@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.gbif</groupId>
+    <artifactId>motherpom</artifactId>
+    <version>16</version>
+  </parent>
+
+  <groupId>org.gbif</groupId>
+  <artifactId>gbif-common-search</artifactId>
+  <version>0.16-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>GBIF Common :: SOLR Search</name>
+  <url>http://github.org/gbif/common-search</url>
+
+  <scm>
+    <connection>scm:git:git@github.com:gbif/common-search.git</connection>
+    <url>https://github.com/gbif/common-search</url>
+    <developerConnection>scm:git:git@github.com:gbif/common-search.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <properties>
+    <gbif-common.version>0.15</gbif-common.version>
+    <commons-beanutils.version>1.8.3</commons-beanutils.version>
+    <commons-io.version>2.4</commons-io.version>
+    <commons-lang3.version>3.1</commons-lang3.version>
+    <findbugs-jsr305.version>2.0.0</findbugs-jsr305.version>
+    <gbif-api.version>0.12</gbif-api.version>
+    <guice.version>3.0</guice.version>
+    <guava.version>14.0.1</guava.version>
+    <junit.version>4.11</junit.version>
+    <mockito.version>1.9.5</mockito.version>
+    <slf4j-api.version>1.7.5</slf4j-api.version>
+    <solr.version>4.4.0</solr.version>
+    <httpclient.version>4.2.3</httpclient.version>
+    <servlet-api.version>2.5</servlet-api.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>gbif-all</id>
+      <url>http://repository.gbif.org/content/groups/gbif</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common</artifactId>
+      <version>${gbif-common.version}</version>
+    </dependency>
+    <dependency>
+      <!-- dependency:analyze _may_ report a false negative & positive here due to commons-beanutils &
+           commons-beanutils-core coming in as transitive dependencies and providing the same classes and packages.
+           We need to depend on either one of the two but commons-beanutils-core is more appropriate -->
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils-core</artifactId>
+      <version>${commons-beanutils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${commons-io.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang3.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>${findbugs-jsr305.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.solr</groupId>
+      <artifactId>solr-core</artifactId>
+      <version>${solr.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.lucene</groupId>
+          <artifactId>lucene-analyzers-morfologik</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.solr</groupId>
+      <artifactId>solr-solrj</artifactId>
+      <version>${solr.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${servlet-api.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- Required by HttpSolrServer -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+      <version>${httpclient.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+      <version>${gbif-api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j-api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>    
+  </dependencies>
+</project>
