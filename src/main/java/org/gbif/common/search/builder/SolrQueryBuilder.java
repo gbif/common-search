@@ -256,53 +256,37 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
   }
 
   /**
-   * Interprets the Country literal from the string value parameter.
-   */
-  private String getCountryParameterValue(final String value) {
-    String solrValue;
-    Country country = Country.fromIsoCode(value);
-    if (country == null) {
-      solrValue = this.getEnumValue(Country.class, value);
-    } else {
-      solrValue = country.getIso2LetterCode();
-    }
-    return solrValue;
-  }
-
-  /**
-   * Extracts the enum value of the parameterValue parameter.
-   * An IllegalArgumentException is thrown if the value can't be interpreted.
-   */
-  private String getEnumValue(Class<? extends Enum<?>> eType, final String paramValue) {
-    Enum<?> e = VocabularyUtils.lookupEnum(paramValue, eType);
-    if (e == null) {
-      throw new IllegalArgumentException("Value " + paramValue + " invalid for filter parameter " + eType.getName());
-    }
-    return String.valueOf(e.ordinal());
-  }
-
-  /**
    * Interprets the value of parameter "value" using types pType (Parameter type) and eType (Enumeration).
    */
   private String getInterpretedValue(final Class<?> pType, final String value) {
     // By default use a phrase query is surrounded by "
     String interpretedValue = APOSTROPHE + value + APOSTROPHE;
     if (Enum.class.isAssignableFrom(pType)) {
-      // treat country codes special
+      // treat country codes special, they use iso codes
+      Enum<?> e;
       if (Country.class.isAssignableFrom(pType)) {
-        interpretedValue = getCountryParameterValue(value);
+        e = Country.fromIsoCode(value);
       } else {
-        interpretedValue = getEnumValue((Class<? extends Enum<?>>) pType, value);
+        e = VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) pType);
       }
+      if (value == null) {
+        throw new IllegalArgumentException("Value " + value + " invalid for filter parameter " + pType.getName());
+      }
+      interpretedValue = String.valueOf(e.ordinal());
+
     } else if (UUID.class.isAssignableFrom(pType)) {
       interpretedValue = UUID.fromString(value).toString();
+
     } else if (Double.class.isAssignableFrom(pType)) {
       interpretedValue = String.valueOf(Double.parseDouble(value));
+
     } else if (Integer.class.isAssignableFrom(pType)) {
       interpretedValue = String.valueOf(Integer.parseInt(value));
+
     } else if (Boolean.class.isAssignableFrom(pType)) {
       interpretedValue = String.valueOf(Boolean.parseBoolean(value));
     }
+
     return interpretedValue;
   }
 
