@@ -2,6 +2,7 @@ package org.gbif.common.search.util;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.SearchTypeValidator;
+import org.gbif.common.search.model.FacetField;
 import org.gbif.common.search.model.FullTextSearchField;
 import org.gbif.common.search.model.WildcardPadding;
 
@@ -11,9 +12,11 @@ import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.TermsParams;
 
 import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
@@ -46,6 +49,17 @@ public class QueryUtils {
   private static final String REGEX_MULTIPLE_BLANKS = "\\s(\\s)+";
 
   private static final String SINGLE_BLANK = "\\ ";
+
+  // Pattern for setting the facet method on single field
+  private static final String FACET_METHOD_FMT = "f.%s" + FacetParams.FACET_METHOD;
+
+
+  private static final ImmutableMap<FacetField.Method, String> FACET_METHOD_MAP =
+    new ImmutableMap.Builder<FacetField.Method, String>()
+      .put(FacetField.Method.ENUM, FacetParams.FACET_METHOD_enum)
+      .put(FacetField.Method.FIELD_CACHE, FacetParams.FACET_METHOD_fc)
+      .put(FacetField.Method.FIELD_CACHE_SEGMENT, FacetParams.FACET_METHOD_fcs)
+      .build();
 
   /**
    * Default private/hidden constructor.
@@ -244,7 +258,7 @@ public class QueryUtils {
   public static void setSortOrder(SolrQuery solrQuery, Map<String, SolrQuery.ORDER> sortOrder) {
     if (sortOrder != null) {
       for (Map.Entry<String, SolrQuery.ORDER> so : sortOrder.entrySet()) {
-        solrQuery.addSortField(so.getKey(), so.getValue());
+        solrQuery.addSort(so.getKey(), so.getValue());
       }
     }
   }
@@ -285,5 +299,12 @@ public class QueryUtils {
    */
   public static String toPhraseQuery(String query) {
     return APOSTROPHE + query + APOSTROPHE;
+  }
+
+  /**
+   * Sets the Solr facet.method for the field parameter accoding to the method parameter.
+   */
+  public static void setFacetMethod(SolrQuery solrQuery, String field, FacetField.Method facetFieldMethod) {
+    solrQuery.setParam(String.format(FACET_METHOD_FMT, field), FACET_METHOD_MAP.get(facetFieldMethod));
   }
 }

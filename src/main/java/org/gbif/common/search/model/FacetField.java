@@ -31,7 +31,7 @@ public @interface FacetField {
   /**
    * Valid sort orders.
    */
-  enum SortOrder {
+  public enum SortOrder {
     /**
      * Sort the constraints by count (highest count first).
      */
@@ -44,13 +44,37 @@ public @interface FacetField {
   }
 
   /**
+   * Indicates what type of algorithm/method to use when faceting a field.
+   */
+  public enum Method {
+
+    /**
+     * Enumerates all terms in a field, calculating the set intersection of documents that match the term with documents
+     * that match the query.
+     */
+    ENUM,
+
+    /**
+     * The facet counts are calculated by iterating over documents that match the query and summing the terms that
+     * appear in each document.
+     */
+    FIELD_CACHE,
+
+    /**
+     * Works the same as FIELD_CACHE except the underlying cache data structure is built for each segment of the index
+     * individually.
+     */
+    FIELD_CACHE_SEGMENT
+  }
+
+  /**
    * @return the field name
    */
   String field();
 
   /**
    * Indicates if count of all matching results which have no value for the field should be included.
-   *
+   * 
    * @return flag that indicates missing facet is included
    */
   boolean missing() default false;
@@ -64,4 +88,6 @@ public @interface FacetField {
    * @return the sort order for this facet field
    */
   SortOrder sort() default SortOrder.COUNT;
+
+  Method method() default Method.FIELD_CACHE;
 }
