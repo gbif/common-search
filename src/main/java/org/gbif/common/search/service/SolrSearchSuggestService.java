@@ -38,13 +38,13 @@ import org.slf4j.LoggerFactory;
 /**
  * Extension of {@link SolrSearchService} that implements the {@link org.gbif.api.service.common.SuggestService}.
  * This class is generic implementation that can be re-used for different and more implementations.
- *
+ * 
  * @param <T> Type of request object
  * @param <R> Type of response object
  * @param <P> the search parameter enum
  */
-public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST extends T, R extends FacetedSearchRequest<P>, RSUG extends SearchRequest<P>>
-  extends SolrSearchService<T, P, ST, R> implements SuggestService<T, P, RSUG> {
+public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST extends T, R extends FacetedSearchRequest<P>, SUGT, SSUGT extends SUGT, RSUG extends SearchRequest<P>>
+  extends SolrSearchService<T, P, ST, R> implements SuggestService<SUGT, P, RSUG> {
 
   // Logger
   private static final Logger LOG = LoggerFactory.getLogger(SolrSearchSuggestService.class);
@@ -54,28 +54,31 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
 
   private static final int DEFAULT_SUGGEST_LIMIT = 10;
 
+  private final Class<SSUGT> suggestAnnotatedClass;
+
   /**
    * Default constructor.
-   *
+   * 
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
   public SolrSearchSuggestService(SolrServer solrServer, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
+    Class<SSUGT> suggestAnnotatedClass) {
     super(solrServer, searchType, searchSolrType, searchParameterType, primarySortOrder);
-
+    this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
       SolrQueryBuilder.create(searchParameterType, searchSolrType).withQueryBuilder(
-        SuggestQueryStringBuilder.create(searchSolrType));
+        SuggestQueryStringBuilder.create(suggestAnnotatedClass));
   }
 
 
   /**
    * Constructor for regular search/suggest operations.
    * Doesn't contain the default order for suggest results.
-   *
+   * 
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
@@ -83,18 +86,19 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
   public SolrSearchSuggestService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
+    Class<SSUGT> suggestAnnotatedClass) {
     super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
-
+    this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
       SolrQueryBuilder.create(searchParameterType, searchSolrType).withRequestHandler(requestHandler)
-        .withQueryBuilder(SuggestQueryStringBuilder.create(searchSolrType));
+        .withQueryBuilder(SuggestQueryStringBuilder.create(suggestAnnotatedClass));
   }
 
 
   /**
    * Full constructor.
-   *
+   * 
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
@@ -104,16 +108,17 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
    */
   public SolrSearchSuggestService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> searchType,
     Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    Map<String, SolrQuery.ORDER> suggestSortOrder) {
+    Map<String, SolrQuery.ORDER> suggestSortOrder, Class<SSUGT> suggestAnnotatedClass) {
     super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
-
+    this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
       SolrQueryBuilder.create(searchParameterType, searchSolrType).withRequestHandler(requestHandler)
-        .withQueryBuilder(SuggestQueryStringBuilder.create(searchSolrType)).withPrimarySortOrder(suggestSortOrder);
+        .withQueryBuilder(SuggestQueryStringBuilder.create(suggestAnnotatedClass))
+        .withPrimarySortOrder(suggestSortOrder);
   }
 
   @Override
-  public List<T> suggest(RSUG suggestRequest) {
+  public List<SUGT> suggest(RSUG suggestRequest) {
     if (suggestRequest.getLimit() < 1) {
       LOG.debug("Suggest request with limit {} found. Reset to default {}", suggestRequest.getLimit(),
         DEFAULT_SUGGEST_LIMIT);
@@ -126,10 +131,9 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
     try {
       SolrQuery solrQuery = suggestQueryBuilder.build(suggestRequest);
       final QueryResponse queryResponse = getSolrServer().query(solrQuery);
-      // Defensive copy: done because the build method is not thread safe.
-      SearchResponseBuilder<T, ST, P> responseBuilder = getResponseBuilder().getCopy();
-      // Create response
-      return responseBuilder.build(suggestRequest, queryResponse).getResults();
+      return (List<SUGT>) SearchResponseBuilder.buildSuggestReponse(suggestRequest, queryResponse,
+        suggestAnnotatedClass)
+        .getResults();
 
     } catch (SolrServerException e) {
       LOG.error("Error executing/building the request", e);

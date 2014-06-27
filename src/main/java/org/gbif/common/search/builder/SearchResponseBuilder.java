@@ -17,6 +17,9 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchResponse;
+import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.common.search.exception.SearchException;
 import org.gbif.common.search.model.HighlightableList;
 
@@ -28,6 +31,7 @@ import java.util.regex.Matcher;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.solr.client.solrj.response.FacetField;
@@ -149,6 +153,29 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
     return searchResponse;
   }
 
+  /**
+   * Builds a simple SearchResponse instance using the current builder state, facets and highlighting reponses are
+   * ommited.
+   * 
+   * @return a new instance of a SearchResponse.
+   */
+  public static <T, ST extends T, P extends SearchParameter> SearchResponse<T, P> buildSuggestReponse(
+    Pageable searchRequest, QueryResponse queryResponse, Class<ST> annotatedClass) {
+    // Create response
+    SearchResponse<T, P> searchResponse = new SearchResponse<T, P>(searchRequest);
+    searchResponse.setCount(queryResponse.getResults().getNumFound());
+    searchResponse.setLimit(queryResponse.getResults().size());
+    // The results and facets are copied into the response
+    final List<ST> resultsST = queryResponse.getBeans(annotatedClass);
+    // convert types
+    final List<T> results = Lists.newArrayList();
+    for (ST x : resultsST) {
+      results.add(x);
+    }
+    searchResponse.setResults(results);
+    return searchResponse;
+  }
+
 
   /**
    * Copies the object's content into a new object.
@@ -232,23 +259,13 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
       for (final FacetField facetField : queryResponse.getFacetFields()) {
         P facetParam = solrField2ParamEnumMap.get(facetField.getName());
         Facet<P> facet = new Facet<P>(facetParam);
-        // the expected enum type for the value if it is an enum - otherwise null
-        Enum<?>[] enumValues = null;
-        if (Enum.class.isAssignableFrom(facetParam.type())) {
-          enumValues = ((Class<? extends Enum<?>>) facetParam.type()).getEnumConstants();
-        }
+
         List<Facet.Count> counts = Lists.newArrayList();
         if (facetField.getValues() != null) {
           for (final FacetField.Count count : facetField.getValues()) {
             String value = count.getName();
-            if (enumValues != null) {
-              try {
-                // if we find integers these are ordinals, translate back to enum names
-                int ordinal = Integer.parseInt(value);
-                value = enumValues[ordinal].name();
-              } catch (NumberFormatException e) {
-                // swallows the exception
-              }
+            if (Enum.class.isAssignableFrom(facetParam.type())) {
+              value = getFacetEnumValue(facetParam, value);
             }
             counts.add(new Facet.Count(value, count.getCount()));
           }
@@ -258,6 +275,36 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
       }
     }
     return facets;
+  }
+
+
+  /**
+   * Gets the facet value of Enum type parameter.
+   * If the Enum is either a Country or a Language, its iso2Letter code it's used.
+   */
+  private String getFacetEnumValue(P facetParam, String value) {
+    // the expected enum type for the value if it is an enum - otherwise null
+    final Enum<?>[] enumValues = ((Class<? extends Enum<?>>) facetParam.type()).getEnumConstants();
+    // if we find integers these are ordinals, translate back to enum names
+    final Integer intValue = Ints.tryParse(value);
+    if (intValue != null) {
+      final Enum<?> enumValue = enumValues[intValue];
+      if (Country.class.equals(facetParam.type())) {
+        return ((Country) enumValue).getIso2LetterCode();
+      } else if (Language.class.equals(facetParam.type())) {
+        return ((Language) enumValue).getIso2LetterCode();
+      } else {
+        return enumValue.name();
+      }
+    } else {
+      if (Country.class.equals(facetParam.type())) {
+        return Country.fromIsoCode(value).getIso2LetterCode();
+      } else if (Language.class.equals(facetParam.type())) {
+        return Language.fromIsoCode(value).getIso2LetterCode();
+      } else {
+        return VocabularyUtils.lookupEnum(value, ((Class<? extends Enum<?>>) facetParam.type())).name();
+      }
+    }
   }
 
   /**
