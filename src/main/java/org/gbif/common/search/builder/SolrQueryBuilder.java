@@ -233,9 +233,6 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
         setFacetMethod(solrQuery, field, fieldDef.method());
       }
     }
-    if (searchRequest.isFacetsOnly()) {
-      solrQuery.setRows(0);
-    }
   }
 
   /**
