@@ -56,6 +56,14 @@ public class SuggestQueryStringBuilderTest {
     assertEquals("(canonical_name_auto:puma^1000) OR (canonical_name:puma^300)", queryStringBuilder.build("puma"));
   }
 
+
+  @Test
+  public void buildWithSpecialCharacters() {
+    assertEquals(
+      "(canonical_name_auto:\"puma (1812,1822)\"^1000 OR canonical_name_auto:puma^1000) OR (canonical_name:puma^300 OR canonical_name:\\(1812,1822\\)^200)",
+      queryStringBuilder.build("puma (1812,1822)"));
+  }
+
   private SolrQuery buildQuery(FacetedSearchRequest<TestSearchParameter> searchRequest) {
     SolrQueryBuilder<TestSearchResult, TestSearchParameter> requestBuilder =
       SolrQueryBuilder.create(TestSearchParameter.class, TestSearchResult.class);
