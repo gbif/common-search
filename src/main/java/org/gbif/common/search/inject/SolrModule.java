@@ -11,7 +11,6 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
@@ -33,35 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SolrModule extends PrivateModule {
 
-  /**
-   * Configurations for solr with optional injection that allow us to provide defaults for a temporary embedded server.
-   */
-  static class SolrConfig {
-
-    @Inject
-    @Named("solr.server.type")
-    public SolrServerType serverType;
-
-    @Inject(optional = true)
-    @Named("solr.server")
-    public String serverHome = null;
-
-    @Inject(optional = true)
-    @Named("solr.collection")
-    public String collection = null;
-
-    @Inject(optional = true)
-    @Named("solr.server.httpLbservers")
-    public String httpLBservers = null;
-
-
-    @Inject(optional = true)
-    @Named("solr.delete")
-    public boolean deleteOnExit = false;
-  }
-
   private static final Logger LOG = LoggerFactory.getLogger(SolrModule.class);
-
 
   /**
    * Provides a Solr server instance based on the SolrServerType.
