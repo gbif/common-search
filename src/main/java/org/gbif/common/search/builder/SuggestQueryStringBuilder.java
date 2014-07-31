@@ -18,6 +18,8 @@ import org.gbif.common.search.util.QueryUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.solr.client.solrj.util.ClientUtils;
+
 import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
 import static org.gbif.common.search.util.QueryUtils.PARAMS_OR_JOINER;
 import static org.gbif.common.search.util.QueryUtils.clearConsecutiveBlanks;
@@ -101,7 +103,8 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
       phraseQuery[1] = startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, tokens[0]);
       query.add(toParenthesesQuery(PARAMS_OR_JOINER.join(phraseQuery)));
       for (String token : tokens) {
-        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, token), partialBoost, false));
+        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(token)),
+          partialBoost, false));
         if (partialBoost > PARTIAL_BOOST_DECREMENT) {
           partialBoost -= PARTIAL_BOOST_DECREMENT;
         }
