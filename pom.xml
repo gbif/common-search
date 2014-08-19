@@ -24,17 +24,17 @@
   </scm>
 
   <properties>
-    <gbif-common.version>0.15</gbif-common.version>
-    <commons-beanutils.version>1.8.3</commons-beanutils.version>
+    <gbif-common.version>0.17-SNAPSHOT</gbif-common.version>
+    <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
-    <commons-lang3.version>3.3.1</commons-lang3.version>
-    <findbugs-jsr305.version>2.0.0</findbugs-jsr305.version>
-    <gbif-api.version>0.15</gbif-api.version>
+    <commons-lang3.version>3.3.2</commons-lang3.version>
+    <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
+    <gbif-api.version>0.16-SNAPSHOT</gbif-api.version>
     <guice.version>3.0</guice.version>
-    <guava.version>14.0.1</guava.version>
+    <guava.version>17.0</guava.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
-    <slf4j-api.version>1.7.5</slf4j-api.version>
+    <slf4j-api.version>1.7.7</slf4j-api.version>
     <solr.version>4.4.0</solr.version>
     <httpclient.version>4.2.3</httpclient.version>
     <servlet-api.version>2.5</servlet-api.version>
@@ -64,11 +64,8 @@
       <version>${gbif-common.version}</version>
     </dependency>
     <dependency>
-      <!-- dependency:analyze _may_ report a false negative & positive here due to commons-beanutils &
-           commons-beanutils-core coming in as transitive dependencies and providing the same classes and packages.
-           We need to depend on either one of the two but commons-beanutils-core is more appropriate -->
       <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils-core</artifactId>
+      <artifactId>commons-beanutils</artifactId>
       <version>${commons-beanutils.version}</version>
     </dependency>
     <dependency>
