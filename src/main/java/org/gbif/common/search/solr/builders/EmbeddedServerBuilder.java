@@ -40,7 +40,7 @@ public class EmbeddedServerBuilder {
     "solrconfig.xml"}, SOLR_DEFAULT_RESOURCES);
 
   // Container name, defaults to collection1
-  private String coreName = CoreContainer.DEFAULT_DEFAULT_CORE_NAME;
+  private String coreName = "collection1";
 
   // Flag to determine if the solr home directory must be deleted (used by tests cases mostly).
   private boolean deleteOnExit;

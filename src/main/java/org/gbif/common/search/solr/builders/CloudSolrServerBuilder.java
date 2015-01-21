@@ -65,18 +65,14 @@ public class CloudSolrServerBuilder {
    * collection name and the Zookeeper server url.
    */
   private CloudSolrServer buildCloudSolrServer(LBHttpSolrServer lbHttpSolrServer) {
-    try {
-      CloudSolrServer cloudSolrServer = null;
-      if (lbHttpSolrServer != null) {
-        cloudSolrServer = new CloudSolrServer(zkHost, lbHttpSolrServer);
-      } else {
-        cloudSolrServer = new CloudSolrServer(zkHost);
-      }
-      cloudSolrServer.setDefaultCollection(defaultCollection);
-      return cloudSolrServer;
-    } catch (MalformedURLException e) {
-      throw new IllegalStateException(e);
+    CloudSolrServer cloudSolrServer;
+    if (lbHttpSolrServer != null) {
+      cloudSolrServer = new CloudSolrServer(zkHost, lbHttpSolrServer);
+    } else {
+      cloudSolrServer = new CloudSolrServer(zkHost);
     }
+    cloudSolrServer.setDefaultCollection(defaultCollection);
+    return cloudSolrServer;
   }
 
   /**
