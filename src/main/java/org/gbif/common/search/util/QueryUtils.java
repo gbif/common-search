@@ -19,6 +19,7 @@ import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.TermsParams;
 
+import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.BLANK;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_FILTER_QUERY;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_PAGE_SIZE;
@@ -48,8 +49,6 @@ public class QueryUtils {
   private static final String REGEX_MULTIPLE_BLANKS = "\\s(\\s)+";
 
   private static final String SINGLE_BLANK = "\\ ";
-
-  private static final char APOSTROPHE_CHAR = '"';
 
   // Pattern for setting the facet method on single field
   private static final String FACET_METHOD_FMT = "f.%s" + FacetParams.FACET_METHOD;
@@ -299,15 +298,7 @@ public class QueryUtils {
    * @param query the input search pattern
    */
   public static String toPhraseQuery(String query) {
-    StringBuilder phraseQuery = new StringBuilder();
-    if (query.charAt(0) != APOSTROPHE_CHAR){
-      phraseQuery.append(APOSTROPHE_CHAR);
-    }
-    phraseQuery.append(query);
-    if (query.charAt(query.length()-1) != APOSTROPHE_CHAR){
-      phraseQuery.append(APOSTROPHE_CHAR);
-    }
-    return phraseQuery.toString();
+    return APOSTROPHE + query + APOSTROPHE;
   }
 
   /**
