@@ -1,6 +1,6 @@
 package org.gbif.common.search.util;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -19,6 +19,14 @@ public class QueryUtilsTest {
 
     String newQuery3His = QueryUtils.parseQueryValue("hi   hi        hi");
     Assert.assertEquals(newQuery3His, QueryUtils.parseQueryValue("hi hi hi"));
+
+
+  }
+
+  @Test
+  public void parseApostrophiedQuery(){
+    String newPhraseQuery3His = QueryUtils.parseQueryValue("\"hi   hi\"");
+    Assert.assertEquals(newPhraseQuery3His, QueryUtils.parseQueryValue("\"hi hi\""));
   }
 
 }

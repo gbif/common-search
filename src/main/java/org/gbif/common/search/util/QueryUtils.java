@@ -19,7 +19,6 @@ import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.TermsParams;
 
-import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.BLANK;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_FILTER_QUERY;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_PAGE_SIZE;
@@ -50,6 +49,8 @@ public class QueryUtils {
 
   private static final String SINGLE_BLANK = "\\ ";
 
+  private static final char APOSTROPHE_CHAR = '"';
+
   // Pattern for setting the facet method on single field
   private static final String FACET_METHOD_FMT = "f.%s" + FacetParams.FACET_METHOD;
 
@@ -70,7 +71,7 @@ public class QueryUtils {
 
   /**
    * Builds SolrQuery suitable to the TermsComponent.
-   * 
+   *
    * @param fieldName solr field to be searched
    * @param limit maximum number of results
    * @return a {@link SolrQuery}
@@ -87,7 +88,7 @@ public class QueryUtils {
 
   /**
    * Builds SolrQuery suitable to the TermsComponent.
-   * 
+   *
    * @param prefix search term
    * @param fieldName solr field to be searched
    * @param limit maximum number of results
@@ -108,7 +109,7 @@ public class QueryUtils {
 
   /**
    * If the query parameter is empty returns the default query "*".
-   * 
+   *
    * @return default query if q parameter is empty
    */
   public static String emptyToDefaultQuery(String q) {
@@ -130,7 +131,7 @@ public class QueryUtils {
 
   /**
    * According to the FullTextSearchField.partialMatching() returns a search pattern that could contains wildcards.
-   * 
+   *
    * @param field the Annotation to be analyzed
    * @param query the input search pattern
    */
@@ -203,7 +204,7 @@ public class QueryUtils {
 
   /**
    * Helper method that sets the parameters for a paginated query.
-   * 
+   *
    * @param pageable the Pageable used to extract the parameters
    * @param solrQuery this object is modified adding the pagination parameters
    */
@@ -216,7 +217,7 @@ public class QueryUtils {
 
   /**
    * Helper method that sets the parameters for a paginated query.
-   * 
+   *
    * @param pageable the Pageable used to extract the parameters
    * @param solrQuery this object is modified adding the pagination parameters
    * @param maxPageSize the maximum page size allowed
@@ -230,7 +231,7 @@ public class QueryUtils {
 
   /**
    * Adds the qt parameter if necessary.
-   * 
+   *
    * @param solrQuery to be modified.
    */
   public static void setRequestHandler(SolrQuery solrQuery, String requestHandler) {
@@ -241,7 +242,7 @@ public class QueryUtils {
 
   /**
    * Adds the shards parameter if necessary.
-   * 
+   *
    * @param solrQuery to be modified.
    */
   public static void setShardsInfo(SolrQuery solrQuery, String shards) {
@@ -252,7 +253,7 @@ public class QueryUtils {
 
   /**
    * Sets the sort order query information.
-   * 
+   *
    * @param solrQuery to be modified.
    */
   public static void setSortOrder(SolrQuery solrQuery, Map<String, SolrQuery.ORDER> sortOrder) {
@@ -265,7 +266,7 @@ public class QueryUtils {
 
   /**
    * Produces a query with the form: "(query)^boostValue".
-   * 
+   *
    * @param query to be boosted
    * @param boostValue Solr boost factor
    * @return a query in format "(query)^boostValue."
@@ -294,11 +295,19 @@ public class QueryUtils {
 
   /**
    * Adds the apostrophes to convert the input pattern into a phrase query pattern.
-   * 
+   *
    * @param query the input search pattern
    */
   public static String toPhraseQuery(String query) {
-    return APOSTROPHE + query + APOSTROPHE;
+    StringBuilder phraseQuery = new StringBuilder();
+    if (query.charAt(0) != APOSTROPHE_CHAR){
+      phraseQuery.append(APOSTROPHE_CHAR);
+    }
+    phraseQuery.append(query);
+    if (query.charAt(query.length()-1) != APOSTROPHE_CHAR){
+      phraseQuery.append(APOSTROPHE_CHAR);
+    }
+    return phraseQuery.toString();
   }
 
   /**
