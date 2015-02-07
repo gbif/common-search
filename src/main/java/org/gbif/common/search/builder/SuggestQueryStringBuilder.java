@@ -14,10 +14,12 @@ package org.gbif.common.search.builder;
 
 import org.gbif.common.search.model.SuggestMapping;
 import org.gbif.common.search.util.QueryUtils;
+import org.gbif.common.search.util.SolrConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import org.apache.solr.client.solrj.util.ClientUtils;
 
 import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
@@ -87,7 +89,7 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
    * Creates a query string that matches terms by to the partial phrase query fields.
    * The method takes a query q with the form: "pum conc" and produces a query with the form, for input puma con:
    * "(canonical_name_auto:\"puma con\"^1000 OR canonical_name_auto:puma^1000) OR (canonical_name:puma^300 OR canonical_name:con^200)"
-   * 
+   *
    * @param q input query
    * @return a string containing a valid Solr query
    */
@@ -99,8 +101,8 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
     List<String> partialQuery = new ArrayList<String>();
     Integer partialBoost = PARTIAL_QUERY_BOOST;
     if (tokens.length > 1) {
-      phraseQuery[0] = phraseQueryTemplate.replace(QUERY_PLACE_HOLDER, cleanQ);
-      phraseQuery[1] = startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, tokens[0]);
+      phraseQuery[0] = phraseQueryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(cleanQ));
+      phraseQuery[1] = startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(tokens[0]));
       query.add(toParenthesesQuery(PARAMS_OR_JOINER.join(phraseQuery)));
       for (String token : tokens) {
         partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(token)),
@@ -110,9 +112,15 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
         }
       }
     } else {
-      phraseQuery[0] = startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, cleanQ);
-      query.add(toParenthesesQuery(PARAMS_OR_JOINER.join(phraseQuery)));
-      partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, tokens[0]), partialBoost, false));
+      if(SolrConstants.DEFAULT_FILTER_QUERY.equals(cleanQ)) {
+        query.add(toParenthesesQuery(startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, cleanQ)));
+        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, tokens[0]), partialBoost, false));
+      } else {
+        query.add(toParenthesesQuery(startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(cleanQ))));
+        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(tokens[0])), partialBoost, false));
+      }
+
+
     }
     query.add(toParenthesesQuery(PARAMS_OR_JOINER.join(partialQuery)));
     return PARAMS_OR_JOINER.join(query);

@@ -22,10 +22,10 @@ public class SuggestQueryStringBuilderTest {
   @Test
   public void buildPhraseQuery() {
     assertEquals(
-      "(canonical_name_auto:\"puma con\"^1000 OR canonical_name_auto:puma^1000) OR (canonical_name:puma^300 OR canonical_name:con^200)",
+      "(canonical_name_auto:\"puma\\ con\"^1000 OR canonical_name_auto:puma^1000) OR (canonical_name:puma^300 OR canonical_name:con^200)",
       queryStringBuilder.build("puma con"));
     assertEquals(
-      "(canonical_name_auto:\"Puma concolor,\"^1000 OR canonical_name_auto:Puma^1000) OR (canonical_name:Puma^300 OR canonical_name:concolor,^200)",
+      "(canonical_name_auto:\"Puma\\ concolor,\"^1000 OR canonical_name_auto:Puma^1000) OR (canonical_name:Puma^300 OR canonical_name:concolor,^200)",
       queryStringBuilder.build("Puma concolor,"));
   }
 
@@ -60,7 +60,7 @@ public class SuggestQueryStringBuilderTest {
   @Test
   public void buildWithSpecialCharacters() {
     assertEquals(
-      "(canonical_name_auto:\"puma (1812,1822)\"^1000 OR canonical_name_auto:puma^1000) OR (canonical_name:puma^300 OR canonical_name:\\(1812,1822\\)^200)",
+      "(canonical_name_auto:\"puma\\ \\(1812,1822\\)\"^1000 OR canonical_name_auto:puma^1000) OR (canonical_name:puma^300 OR canonical_name:\\(1812,1822\\)^200)",
       queryStringBuilder.build("puma (1812,1822)"));
   }
 
@@ -76,6 +76,16 @@ public class SuggestQueryStringBuilderTest {
       SolrQueryBuilder.create(TestSearchParameter.class, TestSearchResult.class);
     requestBuilder.withQueryBuilder(queryStringBuilder);
     return requestBuilder.build(searchRequest);
+  }
+
+  /**
+   * Tests if a phrase query is correctly escaped.
+   */
+  @Test
+  public void buildQuotedPhraseQuery() {
+    assertEquals(
+      "(canonical_name_auto:\"\\\"puma\\ con\\\"\"^1000 OR canonical_name_auto:\\\"puma^1000) OR (canonical_name:\\\"puma^300 OR canonical_name:con\\\"^200)",
+      queryStringBuilder.build("\"puma con\""));
   }
 
 }
