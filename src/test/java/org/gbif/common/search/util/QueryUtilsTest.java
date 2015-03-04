@@ -21,4 +21,14 @@ public class QueryUtilsTest {
     Assert.assertEquals(newQuery3His, QueryUtils.parseQueryValue("hi hi hi"));
   }
 
+  /**
+   * Asserts that Solr reserved words are escaped.
+   */
+  @Test
+  public void parseSolrReservedWordsTest(){
+    Assert.assertEquals(QueryUtils.parseQueryValue("OR"),"\"OR\"");
+    Assert.assertEquals(QueryUtils.parseQueryValue("AND"),"\"AND\"");
+    Assert.assertEquals(QueryUtils.parseQueryValue("NOT"),"\"NOT\"");
+  }
+
 }

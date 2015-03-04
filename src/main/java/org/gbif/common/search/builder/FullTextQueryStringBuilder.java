@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+
 import static org.gbif.common.search.util.AnnotationUtils.initFullTextFieldsPropertiesMap;
 import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
 import static org.gbif.common.search.util.QueryUtils.getExactMatchField;

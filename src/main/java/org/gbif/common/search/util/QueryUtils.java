@@ -18,6 +18,7 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.TermsParams;
+import org.apache.solr.parser.QueryParser;
 
 import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.BLANK;
@@ -179,7 +180,7 @@ public class QueryUtils {
       // If default query was sent, must not be escaped
       if (!qValue.equals(DEFAULT_FILTER_QUERY)) {
         qValue = clearConsecutiveBlanks(qValue);
-        qValue = ClientUtils.escapeQueryChars(qValue);
+        qValue = escapeQuery(qValue);
       }
       // make it a phrase query if it contains blanks
       if (qValue.contains(BLANK)) {
@@ -189,6 +190,16 @@ public class QueryUtils {
     return qValue;
   }
 
+  /**
+   * Escape special characters and Solr reserved words.
+   */
+  public static String escapeQuery(String value) {
+    if (value.equals(QueryParser.Operator.AND.name()) || value.equals(QueryParser.Operator.OR.name())
+      || value.equals(SolrConstants.SOLR_NOT_OP)) {
+      return toPhraseQuery(ClientUtils.escapeQueryChars(value));
+    }
+    return ClientUtils.escapeQueryChars(value);
+  }
 
   /**
    * If the value parameter starts with {@link SearchConstants#NOT_OP} it is removed.

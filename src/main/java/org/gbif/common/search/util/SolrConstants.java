@@ -21,6 +21,7 @@ public class SolrConstants {
   public static final String PARAM_AND_OP = " AND ";
   public static final String HTTP_AND_OP = "&";
   public static final String NOT_OP = "-";
+  public static final String SOLR_NOT_OP = "NOT";
   public static final String APOSTROPHE = "\"";
   public static final String BLANK = " ";
   public static final String ALT_QUERY_PARAM = "q.alt";
