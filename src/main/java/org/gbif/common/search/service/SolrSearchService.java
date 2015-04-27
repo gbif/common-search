@@ -117,7 +117,7 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
       SolrQuery solrQuery = requestBuilder.build(searchRequest);
 
       // Executes the search operation in Solr
-      LOG.info("Solr query executed: {}", solrQuery);
+      LOG.debug("Solr query executed: {}", solrQuery);
       final QueryResponse queryResponse = solrServer.query(solrQuery);
 
       // Defensive copy: done because the build method is not thread safe.
