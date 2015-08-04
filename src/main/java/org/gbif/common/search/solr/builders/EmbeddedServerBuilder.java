@@ -11,14 +11,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.core.CoreContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Builds an instance of a {@link EmbeddedSolrServer}. The {@link SolrServer} can be created at a specific directory;
+ * Builds an instance of a {@link EmbeddedSolrServer}. The {@link SolrClient} can be created at a specific directory;
  * set by the method withServerHomeDir, is the home directory is not specified a temporary directory is created.
  */
 public class EmbeddedServerBuilder {
@@ -52,7 +52,7 @@ public class EmbeddedServerBuilder {
    * Builds a {@link EmbeddedSolrServer} instance. The server is created at the specified directory.
    * If a solrHome directory is not specified a temporary directory is created (used by test cases).
    */
-  public SolrServer build() {
+  public SolrClient build() {
     if (Strings.isNullOrEmpty(serverHomeDir)) {
       try {
         serverHomeDir = FileUtils.createTempDir("solr-", "").getAbsolutePath();
@@ -107,7 +107,7 @@ public class EmbeddedServerBuilder {
    * <li>stopwords.txt</li>
    * </ul>
    * Override this method if your config files are kept somewhere else then the default solr/conf.
-   * 
+   *
    * @return path on classpath
    */
   protected String getSolrConfigHome() {
@@ -115,16 +115,16 @@ public class EmbeddedServerBuilder {
   }
 
   /**
-   * Build the {@link EmbeddedSolrServer} instance, pointing to the solrHome directory.
+   * Build the {@link SolrClient} instance, pointing to the solrHome directory.
    */
-  private SolrServer builSolrServer(File solrHome) {
+  private SolrClient builSolrServer(File solrHome) {
     // create coreName
     System.setProperty(SOLR_HOME, solrHome.getAbsolutePath());
     CoreContainer cc = new CoreContainer(solrHome.getAbsolutePath());
     cc.load();
-    SolrServer solrServer = new EmbeddedSolrServer(cc, coreName);
+    SolrClient solrClient = new EmbeddedSolrServer(cc, coreName);
     LOG.info("Created embedded solr server with solr dir {}", solrHome.getAbsolutePath());
-    return solrServer;
+    return solrClient;
   }
 
   /**

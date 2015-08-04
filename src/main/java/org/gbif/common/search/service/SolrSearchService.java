@@ -21,13 +21,14 @@ import org.gbif.common.search.builder.SearchResponseBuilder;
 import org.gbif.common.search.builder.SolrQueryBuilder;
 import org.gbif.common.search.exception.SearchException;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.slf4j.Logger;
@@ -35,10 +36,10 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Generic {@link SearchService} that encapsulates the communication with a {@link SolrServer}.
+ * Generic {@link SearchService} that encapsulates the communication with a {@link SolrClient}.
  * The basic implementation of the service is a search operation that holds all the valid parameters.
  * The response returned is basically information taken from the Solr {@link QueryResponse}.
- * During the initialization time the class expects a {@link SolrServer} instance which
+ * During the initialization time the class expects a {@link SolrClient} instance which
  * depending on the configuration parameters is an remote or a embedded Solr server.
  * Additionally, this class internally implements the necessary logic for accessing the mapped fields between Solr and
  * the request object values; most of this is implemented by using annotations, enum types and java introspection.
@@ -57,7 +58,7 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
    * Solr server instance, this abstract type is used because it can hold instance of:
    * CommonsHttpSolrServer or EmbeddedSolrServer.
    */
-  private final SolrServer solrServer;
+  private final SolrClient solrClient;
 
   // Cached instance of response builder.
   // This instance is used for cloning subsequent usages of this object without the penalty recreate similar instances.
@@ -73,9 +74,9 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
    * @param type of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
-  public SolrSearchService(SolrServer solrServer, Class<T> type, Class<ST> solrType,
+  public SolrSearchService(SolrClient solrClient, Class<T> type, Class<ST> solrType,
     Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
-    this.solrServer = solrServer;
+    this.solrClient = solrClient;
     FullTextQueryStringBuilder fullTextQueryBuilder = FullTextQueryStringBuilder.create(solrType);
     responseBuilder = SearchResponseBuilder.create(type, solrType, enumSearchParamType);
     responseBuilder.withHighlightFields(fullTextQueryBuilder.getHighlightedFields());
@@ -87,16 +88,16 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
   /**
    * Full constructor.
    *
-   * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
+   * @param solrClient Solr client instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param type of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
-  public SolrSearchService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> type,
+  public SolrSearchService(SolrClient solrClient, @Nullable final String requestHandler, Class<T> type,
     Class<ST> solrType,
     Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
-    this(solrServer, type, solrType, enumSearchParamType, primarySortOrder);
+    this(solrClient, type, solrType, enumSearchParamType, primarySortOrder);
     searchQueryBuilder.withRequestHandler(requestHandler);
   }
 
@@ -118,7 +119,7 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
 
       // Executes the search operation in Solr
       LOG.debug("Solr query executed: {}", solrQuery);
-      final QueryResponse queryResponse = solrServer.query(solrQuery);
+      final QueryResponse queryResponse = solrClient.query(solrQuery);
 
       // Defensive copy: done because the build method is not thread safe.
       return responseBuilder.getCopy().build(searchRequest, queryResponse);
@@ -130,6 +131,9 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
         LOG.error("Error executing the search operation", e);
         throw new SearchException(e);
       }
+    } catch (IOException e) {
+      LOG.error("Error executing the search operation", e);
+      throw new SearchException(e);
     }
   }
 
@@ -142,9 +146,9 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
 
 
   /**
-   * @return the solrServer
+   * @return the solrClient
    */
-  protected SolrServer getSolrServer() {
-    return solrServer;
+  protected SolrClient getSolrClient() {
+    return solrClient;
   }
 }

@@ -22,13 +22,14 @@ import org.gbif.common.search.builder.SolrQueryBuilder;
 import org.gbif.common.search.builder.SuggestQueryStringBuilder;
 import org.gbif.common.search.exception.SearchException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Extension of {@link SolrSearchService} that implements the {@link org.gbif.api.service.common.SuggestService}.
  * This class is generic implementation that can be re-used for different and more implementations.
- * 
+ *
  * @param <T> Type of request object
  * @param <R> Type of response object
  * @param <P> the search parameter enum
@@ -58,16 +59,16 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
 
   /**
    * Default constructor.
-   * 
-   * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
-   *        CommonsHttpSolrServer or EmbeddedSolrServer
+   *
+   * @param solrClient Solr server instance, this abstract type is used because it can hold instance of
+   *        HttpSolrClient or EmbeddedSolrServer
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
-  public SolrSearchSuggestService(SolrServer solrServer, Class<T> searchType,
+  public SolrSearchSuggestService(SolrClient solrClient, Class<T> searchType,
     Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
     Class<SSUGT> suggestAnnotatedClass) {
-    super(solrServer, searchType, searchSolrType, searchParameterType, primarySortOrder);
+    super(solrClient, searchType, searchSolrType, searchParameterType, primarySortOrder);
     this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
       SolrQueryBuilder.create(searchParameterType, searchSolrType).withQueryBuilder(
@@ -78,17 +79,17 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
   /**
    * Constructor for regular search/suggest operations.
    * Doesn't contain the default order for suggest results.
-   * 
+   *
    * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
-  public SolrSearchSuggestService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> searchType,
+  public SolrSearchSuggestService(SolrClient solrClient, @Nullable final String requestHandler, Class<T> searchType,
     Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
     Class<SSUGT> suggestAnnotatedClass) {
-    super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
+    super(solrClient, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
     this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
       SolrQueryBuilder.create(searchParameterType, searchSolrType).withRequestHandler(requestHandler)
@@ -98,18 +99,18 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
 
   /**
    * Full constructor.
-   * 
-   * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
+   *
+   * @param solrClient Solr client instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    * @param suggestSortOrder ordered fields used for an optional sort order in every suggest operation
    */
-  public SolrSearchSuggestService(SolrServer solrServer, @Nullable final String requestHandler, Class<T> searchType,
+  public SolrSearchSuggestService(SolrClient solrClient, @Nullable final String requestHandler, Class<T> searchType,
     Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
     Map<String, SolrQuery.ORDER> suggestSortOrder, Class<SSUGT> suggestAnnotatedClass) {
-    super(solrServer, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
+    super(solrClient, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
     this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
       SolrQueryBuilder.create(searchParameterType, searchSolrType).withRequestHandler(requestHandler)
@@ -130,12 +131,15 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
 
     try {
       SolrQuery solrQuery = suggestQueryBuilder.build(suggestRequest);
-      final QueryResponse queryResponse = getSolrServer().query(solrQuery);
+      final QueryResponse queryResponse = getSolrClient().query(solrQuery);
       return (List<SUGT>) SearchResponseBuilder.buildSuggestReponse(suggestRequest, queryResponse,
         suggestAnnotatedClass)
         .getResults();
 
     } catch (SolrServerException e) {
+      LOG.error("Error executing/building the request", e);
+      throw new SearchException(e);
+    } catch (IOException e) {
       LOG.error("Error executing/building the request", e);
       throw new SearchException(e);
     }

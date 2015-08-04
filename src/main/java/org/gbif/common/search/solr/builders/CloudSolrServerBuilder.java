@@ -2,9 +2,10 @@ package org.gbif.common.search.solr.builders;
 
 import java.net.MalformedURLException;
 
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,14 +26,13 @@ public class CloudSolrServerBuilder {
   private String defaultCollection;
 
   /**
-   * Builds a {@link CloudSolrServer} instance with a default collection name and pointing to a Zookeeper server.
+   * Builds a {@link LBHttpSolrClient} instance with a default collection name and pointing to a Zookeeper server.
    */
-  public SolrServer build() {
+  public SolrClient build() {
     checkNotNull(zkHost);
     checkNotNull(defaultCollection);
     // Creates the load-balanced SolrServer.
-    LBHttpSolrServer lbHttpSolrServer = buildLBHttpSolrServer();
-    return buildCloudSolrServer(lbHttpSolrServer);
+    return buildCloudSolrServer(buildLBHttpSolrClient());
   }
 
   /**
@@ -44,7 +44,7 @@ public class CloudSolrServerBuilder {
   }
 
   /**
-   * List of Solr servers to be used in the {@link LBHttpSolrServer} instance creation.
+   * List of Solr servers to be used in the {@link LBHttpSolrClient} instance creation.
    */
   public CloudSolrServerBuilder withHttpLBServers(String... httpLBServers) {
     this.httpLBServers = httpLBServers;
@@ -61,28 +61,28 @@ public class CloudSolrServerBuilder {
   }
 
   /**
-   * Creates the {@link CloudSolrServer}. Uses the {@link LBHttpSolrServer} parameter (if not is null), the default
+   * Creates the {@link CloudSolrClient}. Uses the {@link LBHttpSolrClient} parameter (if not is null), the default
    * collection name and the Zookeeper server url.
    */
-  private CloudSolrServer buildCloudSolrServer(LBHttpSolrServer lbHttpSolrServer) {
-    CloudSolrServer cloudSolrServer;
-    if (lbHttpSolrServer != null) {
-      cloudSolrServer = new CloudSolrServer(zkHost, lbHttpSolrServer);
+  private CloudSolrClient buildCloudSolrServer(LBHttpSolrClient lbHttpSolrClient) {
+    CloudSolrClient cloudSolrClient;
+    if (lbHttpSolrClient != null) {
+      cloudSolrClient = new CloudSolrClient(zkHost, lbHttpSolrClient);
     } else {
-      cloudSolrServer = new CloudSolrServer(zkHost);
+      cloudSolrClient = new CloudSolrClient(zkHost);
     }
-    cloudSolrServer.setDefaultCollection(defaultCollection);
-    return cloudSolrServer;
+    cloudSolrClient.setDefaultCollection(defaultCollection);
+    return cloudSolrClient;
   }
 
   /**
-   * Builds a {@link LBHttpSolrServer} instance using the list of HTTP Solr servers.
+   * Builds a {@link LBHttpSolrClient} instance using the list of HTTP Solr servers.
    */
-  private LBHttpSolrServer buildLBHttpSolrServer() {
-    LBHttpSolrServer lbHttpSolrServer = null;
+  private LBHttpSolrClient buildLBHttpSolrClient() {
+    LBHttpSolrClient lbHttpSolrServer = null;
     try {
       if (httpLBServers != null && httpLBServers.length > 0) {
-        return new LBHttpSolrServer(httpLBServers);
+        return new LBHttpSolrClient(httpLBServers);
       }
     } catch (MalformedURLException e) {
       throw new IllegalStateException(e);

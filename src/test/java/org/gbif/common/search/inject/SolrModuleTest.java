@@ -6,7 +6,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.junit.Test;
 
@@ -25,11 +25,11 @@ public class SolrModuleTest {
   }
 
   @Test
-  public void testModuleWithutConfigs() throws IOException, SolrServerException {
+  public void testModuleWithoutConfigs() throws IOException, SolrServerException {
     // no properties bound, expect embedded /tmp server as default
     Injector injector = Guice.createInjector(new TestModule(), new SolrModule());
     // a real embedded solr
-    SolrServer solr = injector.getInstance(SolrServer.class);
+    SolrClient solr = injector.getInstance(SolrClient.class);
     // do sth with the server to make sure its real and not just lazy
     solr.commit();
     solr.ping();

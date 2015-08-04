@@ -63,7 +63,7 @@
         type -->
 
 
-    <fieldType name="date" class="solr.DateField"
+    <fieldType name="date" class="solr.TrieDateField"
                sortMissingLast="true" omitNorms="true"/>
 
     <!-- A text field that uses WordDelimiterFilter to enable splitting and

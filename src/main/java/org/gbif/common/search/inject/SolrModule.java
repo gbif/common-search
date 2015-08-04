@@ -11,9 +11,9 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * default.
  * solr.server: a http url to a remote Solr server, path for an embedded Solr or Zookeeper server url.
  * solr.collection: Solr collection name (required by {@link CloudSolrServerBuilder})
- * solr.server.http_lbservers: list of Solr http servers to create instance of {@link LBHttpSolrServer} (optional for
+ * solr.server.http_lbservers: list of Solr http servers to create instance of {@link LBHttpSolrClient} (optional for
  * {@link CloudSolrServerBuilder}).
  * If empty an embedded server in /tmp will be created
  * solr.delete: if null or true deletes any embedded server artifacts after java shuts down.
@@ -35,12 +35,12 @@ public class SolrModule extends PrivateModule {
   private static final Logger LOG = LoggerFactory.getLogger(SolrModule.class);
 
   /**
-   * Provides a Solr server instance based on the SolrServerType.
+   * Provides a Solr client instance based on the SolrServerType.
    */
   @Provides
   @Singleton
   @Inject
-  public SolrServer providerSolr(SolrConfig cfg) {
+  public SolrClient providerSolr(SolrConfig cfg) {
     if (cfg.serverType == SolrServerType.EMBEDDED) {
       LOG.info("Using embedded solr server {}", cfg.serverHome);
       EmbeddedServerBuilder serverBuilder = new EmbeddedServerBuilder()
@@ -49,7 +49,7 @@ public class SolrModule extends PrivateModule {
     } else if (cfg.serverType == SolrServerType.LBHTTP) {
       try {
         LOG.info("Using remote load-balanced solr server {}", cfg.serverHome);
-        return new LBHttpSolrServer(cfg.serverHome);
+        return new LBHttpSolrClient(cfg.serverHome);
       } catch (MalformedURLException e) {
         throw new IllegalStateException(e);
       }
@@ -60,13 +60,13 @@ public class SolrModule extends PrivateModule {
       return serverBuilder.build();
     } else { // cfg.serverType == SolrServerType.HTTP)
       LOG.info("Using remote solr server {}", cfg.serverHome);
-      return new HttpSolrServer(cfg.serverHome);
+      return new HttpSolrClient(cfg.serverHome);
     }
   }
 
   @Override
   protected void configure() {
     bind(SolrConfig.class).in(Scopes.SINGLETON);
-    expose(SolrServer.class);
+    expose(SolrClient.class);
   }
 }

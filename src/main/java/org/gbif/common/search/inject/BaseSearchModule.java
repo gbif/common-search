@@ -30,11 +30,11 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.apache.commons.io.IOUtils;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.BinaryRequestWriter;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.core.CoreContainer;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public abstract class BaseSearchModule extends AbstractModule {
    */
   public BaseSearchModule(Properties properties, String propertyPrefix) {
     this.propertyPrefix = propertyPrefix;
-    this.configurationFile = "";
+    configurationFile = "";
     this.properties = buildProperties(properties);
   }
 
@@ -140,35 +140,35 @@ public abstract class BaseSearchModule extends AbstractModule {
    */
   @Provides
   @Singleton
-  protected SolrServer provideSolrServer(@Named(SOLR_SERVER_KEY) String solrServerPath,
+  protected SolrClient provideSolrServer(@Named(SOLR_SERVER_KEY) String solrServerPath,
     @Named(SOLR_EMBEDDED_KEY) Boolean isEmbedded) {
-    SolrServer solrServer = null;
+    SolrClient sorlClient = null;
     try {
       LOG.info("Creating solr server with path={}", solrServerPath);
       if (isEmbedded) {
         System.setProperty(SOLR_HOME, solrServerPath);
         CoreContainer coreContainer = new CoreContainer(solrServerPath);
-        solrServer = new EmbeddedSolrServer(coreContainer, "");
+        sorlClient = new EmbeddedSolrServer(coreContainer, "");
       } else { // remote instance
-        solrServer = new HttpSolrServer(solrServerPath);
-        ((HttpSolrServer) solrServer).setRequestWriter(new BinaryRequestWriter());
-        ((HttpSolrServer) solrServer).setAllowCompression(true);
+        sorlClient = new HttpSolrClient(solrServerPath);
+        ((HttpSolrClient) sorlClient).setRequestWriter(new BinaryRequestWriter());
+        ((HttpSolrClient) sorlClient).setAllowCompression(true);
       }
-      solrServer.ping();
+      sorlClient.ping();
     } catch (MalformedURLException e) {
-      LOG.error("Error reaching remote SolrServer files", e);
+      LOG.error("Error reaching remote SolrClient files", e);
       throw new SearchException(e);
     } catch (IOException e) {
-      LOG.error("Error accessing SolrServer configuration files", e);
+      LOG.error("Error accessing SolrClient configuration files", e);
       throw new SearchException(e);
     } catch (SolrException e) {
-      LOG.error("Error parsing SolrServer configuration files", e);
+      LOG.error("Error parsing SolrClient configuration files", e);
       throw new SearchException(e);
     } catch (SolrServerException e) {
-      LOG.error("Error creating a SolrServer instance", e);
+      LOG.error("Error creating a SolrClient instance", e);
       throw new SearchException(e);
     }
 
-    return solrServer;
+    return sorlClient;
   }
 }
