@@ -43,7 +43,7 @@ public class SolrQueryBuilderTest {
     assertTrue(facets.contains("rank"));
     assertTrue(facets.contains("higher_taxon_nub_key"));
     assertFilterQueryContains(query, "{!tag=ffqextinct}extinct:true");
-    assertFilterQueryContains(query, "{!tag=ffqrank}(rank:30 OR rank:26)");
+    assertFilterQueryContains(query, "{!tag=ffqrank}(rank:26 OR rank:30)");
     assertFilterQueryContains(query, "{!tag=ffqhigher_taxon_nub_key}higher_taxon_nub_key:111");
   }
 
