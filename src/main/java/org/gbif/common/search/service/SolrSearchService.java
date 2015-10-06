@@ -85,6 +85,16 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
     searchQueryBuilder.withPrimarySortOrder(new LinkedHashMap<String, SolrQuery.ORDER>(primarySortOrder));
   }
 
+  public SolrSearchService(SolrClient solrClient, Class<T> type, Class<ST> solrType,
+                           Class<P> enumSearchParamType) {
+    this.solrClient = solrClient;
+    FullTextQueryStringBuilder fullTextQueryBuilder = FullTextQueryStringBuilder.create(solrType);
+    responseBuilder = SearchResponseBuilder.create(type, solrType, enumSearchParamType);
+    responseBuilder.withHighlightFields(fullTextQueryBuilder.getHighlightedFields());
+    searchQueryBuilder = SolrQueryBuilder.create(enumSearchParamType, solrType);
+    searchQueryBuilder.withQueryBuilder(fullTextQueryBuilder);
+  }
+
   /**
    * Full constructor.
    *
