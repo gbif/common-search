@@ -29,13 +29,13 @@
     <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.3.2</commons-lang3.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
-    <gbif-api.version>0.27</gbif-api.version>
+    <gbif-api.version>0.29</gbif-api.version>
     <guice.version>3.0</guice.version>
     <guava.version>18.0</guava.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <slf4j-api.version>1.7.10</slf4j-api.version>
-    <solr.version>4.10.3</solr.version>
+    <solr.version>5.3.1</solr.version>
     <httpclient.version>4.3.6</httpclient.version>
     <servlet-api.version>2.5</servlet-api.version>
   </properties>
