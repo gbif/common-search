@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * @param <P> the search parameter enum also used for facets
  */
 public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extends T, R extends FacetedSearchRequest<P>>
-  implements SearchService<T, P, R> {
+    implements SearchService<T, P, R> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SolrSearchService.class);
 

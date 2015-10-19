@@ -44,7 +44,7 @@ public class SolrModule extends PrivateModule {
     if (cfg.serverType == SolrServerType.EMBEDDED) {
       LOG.info("Using embedded solr server {}", cfg.serverHome);
       EmbeddedServerBuilder serverBuilder = new EmbeddedServerBuilder()
-        .withServerHomeDir(cfg.serverHome).withDeleteOnExit(cfg.deleteOnExit);
+          .withServerHomeDir(cfg.serverHome).withDeleteOnExit(cfg.deleteOnExit);
       return serverBuilder.build();
     } else if (cfg.serverType == SolrServerType.LBHTTP) {
       try {
@@ -55,8 +55,7 @@ public class SolrModule extends PrivateModule {
       }
     } else if (cfg.serverType == SolrServerType.CLOUD) {
       CloudSolrServerBuilder serverBuilder = new CloudSolrServerBuilder()
-        .withDefaultCollection(cfg.collection).withHttpLBServers(cfg.httpLBservers)
-        .withZkHost(cfg.serverHome);
+          .withZkHost(cfg.serverHome);
       return serverBuilder.build();
     } else { // cfg.serverType == SolrServerType.HTTP)
       LOG.info("Using remote solr server {}", cfg.serverHome);

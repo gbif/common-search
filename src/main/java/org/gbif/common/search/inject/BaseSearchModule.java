@@ -142,7 +142,7 @@ public abstract class BaseSearchModule extends AbstractModule {
   @Singleton
   protected SolrClient provideSolrServer(@Named(SOLR_SERVER_KEY) String solrServerPath,
     @Named(SOLR_EMBEDDED_KEY) Boolean isEmbedded) {
-    SolrClient sorlClient = null;
+    SolrClient sorlClient;
     try {
       LOG.info("Creating solr server with path={}", solrServerPath);
       if (isEmbedded) {

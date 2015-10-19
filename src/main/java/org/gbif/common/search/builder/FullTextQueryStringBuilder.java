@@ -59,7 +59,7 @@ public class FullTextQueryStringBuilder extends QueryStringBuilderBase {
       for (FullTextSearchField field : fullTextSearchFields) {
         String exactMatchField = getExactMatchField(field);
         String exactMatchSubQuery =
-          PARAMS_JOINER.join(exactMatchField, QUERY_PLACE_HOLDER + SCORE_OP + field.exactMatchScore());
+            PARAMS_JOINER.join(exactMatchField, QUERY_PLACE_HOLDER + SCORE_OP + field.exactMatchScore());
         fullTextQueryComponents.add(exactMatchSubQuery);
         phraseQueryComponents.add(exactMatchSubQuery);
         setWildcardFilters(fullTextQueryComponents, phraseQueryComponents, field, exactMatchField);
@@ -75,7 +75,7 @@ public class FullTextQueryStringBuilder extends QueryStringBuilderBase {
    * Sets the filters for wildcard (if applicable) queries.
    */
   private void setWildcardFilters(List<String> fullTextQueryComponents, List<String> phraseQueryComponents,
-    FullTextSearchField field, String exactMatchField) {
+                                  FullTextSearchField field, String exactMatchField) {
     if (field.partialMatching() != WildcardPadding.NONE) {
       fullTextQueryComponents
         .add(PARAMS_JOINER.join(field.field(), getMatchPatternAndScore(field, QUERY_PLACE_HOLDER)));

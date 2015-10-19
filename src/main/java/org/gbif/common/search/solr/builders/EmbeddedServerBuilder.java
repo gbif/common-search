@@ -1,6 +1,5 @@
 package org.gbif.common.search.solr.builders;
 
-import org.gbif.common.search.inject.SolrModule;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.utils.file.ResourcesUtil;
 
@@ -24,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class EmbeddedServerBuilder {
 
 
-  private static final Logger LOG = LoggerFactory.getLogger(SolrModule.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServerBuilder.class);
 
   // Default Solr configuration directory
   private static final String SOLR_CONF = "solr/conf/";
@@ -97,22 +96,6 @@ public class EmbeddedServerBuilder {
     return this;
   }
 
-  /**
-   * Returns the classpath to the folder containing the solr schema.xml and solrconfig.xml files.
-   * If existing the following files are also used to create an embedded solr home dir - otherwise
-   * the solr default files are used:
-   * <ul>
-   * <li>synonyms.txt</li>
-   * <li>protwords.txt</li>
-   * <li>stopwords.txt</li>
-   * </ul>
-   * Override this method if your config files are kept somewhere else then the default solr/conf.
-   *
-   * @return path on classpath
-   */
-  protected String getSolrConfigHome() {
-    return SOLR_CONF;
-  }
 
   /**
    * Build the {@link SolrClient} instance, pointing to the solrHome directory.
@@ -141,7 +124,7 @@ public class EmbeddedServerBuilder {
       File conf = new File(coreDir, "conf");
       ResourcesUtil.copy(conf, "solr/default/", false, SOLR_DEFAULT_RESOURCES);
       // copy specific configurations, overwriting above defaults
-      ResourcesUtil.copy(conf, getSolrConfigHome(), true, SOLR_CONF_DEFAULT_RESOURCES);
+      ResourcesUtil.copy(conf, SOLR_CONF, true, SOLR_CONF_DEFAULT_RESOURCES);
       // create empty core.properties in core dir
       File coreProp = new File(coreDir, "core.properties");
       coreProp.createNewFile();

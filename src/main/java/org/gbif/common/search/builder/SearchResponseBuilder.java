@@ -52,7 +52,7 @@ import static org.gbif.common.search.util.SolrConstants.HL_PRE_REGEX;
  * {@link org.apache.solr.client.solrj.response.QueryResponse} objects.
  * The build method is not thread safe, supports the cloneable interface for allowing holds a partial state,
  * that can be cloned and repeated in other instances.
- * 
+ *
  * @param <T> is the response type.
  * @param <ST> is the type of the annotated class that holds the mapping information.
  * @param <P> is the search parameter enumeration.
@@ -83,12 +83,13 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
    * Private full constructor of final fields only.
    */
   private SearchResponseBuilder(Class<T> responseClass, Class<ST> annotatedClass,
-    BiMap<String, P> solrField2ParamEnumMap, BiMap<String, String> solrField2javaPropertiesMap) {
+                                BiMap<String, P> solrField2ParamEnumMap,
+                                BiMap<String, String> solrField2javaPropertiesMap) {
     this.responseClass = responseClass;
     this.annotatedClass = annotatedClass;
     this.solrField2ParamEnumMap = solrField2ParamEnumMap;
     this.solrField2javaPropertiesMap = solrField2javaPropertiesMap;
-    this.keyField = getKeyField(annotatedClass);
+    keyField = getKeyField(annotatedClass);
   }
 
   /**
@@ -97,23 +98,23 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
   private SearchResponseBuilder(Class<T> responseClass, Class<ST> annotatedClass, Class<P> enumClass) {
     this.responseClass = responseClass;
     this.annotatedClass = annotatedClass;
-    this.solrField2ParamEnumMap = initFacetFieldsPropertiesMap(annotatedClass, enumClass);
-    this.solrField2javaPropertiesMap = initFieldsPropertiesMap(annotatedClass);
-    this.keyField = getKeyField(annotatedClass);
+    solrField2ParamEnumMap = initFacetFieldsPropertiesMap(annotatedClass, enumClass);
+    solrField2javaPropertiesMap = initFieldsPropertiesMap(annotatedClass);
+    keyField = getKeyField(annotatedClass);
   }
 
 
   /**
    * Factory method that reuses a facets mapping map and the default factory method.
-   * 
+   *
    * @param annotatedClass that contains search related mappings and is the result the of the response
    *        content.
    * @param facetFieldsPropertiesMap map containing facet fields names <-> solr fields names.
    * @return a new instance of a SearchResponseBuilder
    */
   public static <T, ST extends T, P extends Enum<?> & SearchParameter> SearchResponseBuilder<T, ST, P> create(
-    Class<T> responseClass, Class<ST> annotatedClass, BiMap<String, P> facetFieldsPropertiesMap,
-    BiMap<String, String> fieldPropertyPropertiesMap) {
+      Class<T> responseClass, Class<ST> annotatedClass, BiMap<String, P> facetFieldsPropertiesMap,
+      BiMap<String, String> fieldPropertyPropertiesMap) {
 
     return new SearchResponseBuilder<T, ST, P>(responseClass, annotatedClass, facetFieldsPropertiesMap,
       fieldPropertyPropertiesMap);
@@ -121,18 +122,18 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
 
   /**
    * Default factory method.
-   * 
+   *
    * @param annotatedClass that contains search related mappings and is the result the of the response content.
    * @return a new instance of a SearchResponseBuilder
    */
   public static <T, ST extends T, P extends Enum<?> & SearchParameter> SearchResponseBuilder<T, ST, P> create(
-    Class<T> responseClass, Class<ST> annotatedClass, Class<P> enumClass) {
+      Class<T> responseClass, Class<ST> annotatedClass, Class<P> enumClass) {
     return new SearchResponseBuilder<T, ST, P>(responseClass, annotatedClass, enumClass);
   }
 
   /**
    * Builds a SearchResponse instance using the current builder state.
-   * 
+   *
    * @return a new instance of a SearchResponse.
    */
   public SearchResponse<T, P> build(Pageable searchRequest, QueryResponse queryResponse) {
@@ -156,11 +157,11 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
   /**
    * Builds a simple SearchResponse instance using the current builder state, facets and highlighting reponses are
    * ommited.
-   * 
+   *
    * @return a new instance of a SearchResponse.
    */
   public static <T, ST extends T, P extends SearchParameter> SearchResponse<T, P> buildSuggestReponse(
-    Pageable searchRequest, QueryResponse queryResponse, Class<ST> annotatedClass) {
+      Pageable searchRequest, QueryResponse queryResponse, Class<ST> annotatedClass) {
     // Create response
     SearchResponse<T, P> searchResponse = new SearchResponse<T, P>(searchRequest);
     searchResponse.setCount(queryResponse.getResults().getNumFound());
@@ -249,7 +250,7 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
    * Helper method that takes Solr response and extracts the facets results.
    * The facets are converted to a list of Facets understood by the search API.
    * The result of this method can be a empty list.
-   * 
+   *
    * @param queryResponse that contains the facets information returned by Solr
    * @return the List of facets retrieved from the Solr response
    */
@@ -302,14 +303,14 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
       } else if (Language.class.equals(facetParam.type())) {
         return Language.fromIsoCode(value).getIso2LetterCode();
       } else {
-        return VocabularyUtils.lookupEnum(value, ((Class<? extends Enum<?>>) facetParam.type())).name();
+        return VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) facetParam.type()).name();
       }
     }
   }
 
   /**
    * Takes the highlighted fields form solrResponse and copies them to the response object.
-   * 
+   *
    * @param response to set the highlighted fields.
    * @param solrResponse to extract the highlighting information
    */

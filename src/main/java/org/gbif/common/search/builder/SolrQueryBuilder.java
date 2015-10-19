@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
@@ -58,7 +59,7 @@ import static org.gbif.common.search.util.SolrConstants.TAG_FIELD_PARAM;
  * Builder class that helps in the creation process of {@link SolrQuery} objects from {@link SearchRequest} objects.
  * The build method is not thread safe, supports the cloneable interface for allowing holds a partial state,
  * that can be cloned and repeated in other instances.
- * 
+ *
  * @param <T> is the type of the annotated class that holds the mapping information.
  * @param <P> is the SearchParameter Enum type used for enumerate the supported facets / search parameter.
  */
@@ -87,7 +88,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    * Full private constructor.
    */
   private SolrQueryBuilder(Class<P> searchParameterEnum, BiMap<String, String> fieldsPropertiesMap,
-    BiMap<String, P> facetFieldsPropertiesMap, Map<String, FacetField> facetFieldDefs) {
+      BiMap<String, P> facetFieldsPropertiesMap, Map<String, FacetField> facetFieldDefs) {
     this.searchParameterEnum = searchParameterEnum;
     this.facetFieldsPropertiesMap = facetFieldsPropertiesMap;
     this.fieldsPropertiesMap = fieldsPropertiesMap;
@@ -108,7 +109,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    * Default factory method.
    */
   public static <T, P extends Enum<?> & SearchParameter> SolrQueryBuilder<T, P> create(Class<P> searchParameterEnum,
-    Class<T> annotatedClass) {
+      Class<T> annotatedClass) {
     return new SolrQueryBuilder<T, P>(searchParameterEnum, annotatedClass);
   }
 
@@ -151,7 +152,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    */
   public SolrQueryBuilder<T, P> getCopy() {
     SolrQueryBuilder<T, P> searchRequestBuilder =
-      new SolrQueryBuilder<T, P>(searchParameterEnum, fieldsPropertiesMap, facetFieldsPropertiesMap, facetFieldDefs);
+        new SolrQueryBuilder<T, P>(searchParameterEnum, fieldsPropertiesMap, facetFieldsPropertiesMap, facetFieldDefs);
     searchRequestBuilder.queryBuilder = queryBuilder;
     searchRequestBuilder.primarySortOrder = primarySortOrder;
     searchRequestBuilder.requestHandler = requestHandler;
@@ -160,7 +161,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
   /**
    * Sets the primarySortOrder names for the distributed query.
-   * 
+   *
    * @param primarySortOrder list of sort orders for mapped fields.
    * @return the current builder instance.
    */
@@ -171,7 +172,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
   /**
    * Adds a {@link QueryStringBuilderBase} to the builder instance.
-   * 
+   *
    * @param queryBuilder to set
    * @return the current builder instance
    */
@@ -183,7 +184,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
   /**
    * Adds a Request Handler to the builder instance.
    * This is particularly useful when an handler contains default settings hidden in it; e.g: distributed search.
-   * 
+   *
    * @param requestHandler to set
    * @return the current builder instance
    */
@@ -194,7 +195,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
   /**
    * Helper method that sets the parameter for a faceted query.
-   * 
+   *
    * @param searchRequest the searchRequest used to extract the parameters
    * @param solrQuery this object is modified by adding the facets parameters
    */
@@ -206,7 +207,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
       // Only show facets that contains at least 1 record
       solrQuery.setFacet(true);
       // defaults if not overridden on per field basis
-      solrQuery.setFacetMinCount(Objects.firstNonNull(searchRequest.getFacetMinCount(), DEFAULT_FACET_COUNT));
+      solrQuery.setFacetMinCount(MoreObjects.firstNonNull(searchRequest.getFacetMinCount(), DEFAULT_FACET_COUNT));
       solrQuery.setFacetMissing(DEFAULT_FACET_MISSING);
       solrQuery.setFacetSort(DEFAULT_FACET_SORT.toString().toLowerCase());
 
@@ -239,7 +240,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    * Utility method that creates the resulting Solr expression for facet and general query filters parameters.
    */
   private StringBuilder buildFilterQuery(final boolean isFacetedRequest, final String solrFieldName,
-    List<String> filterQueriesComponents) {
+      List<String> filterQueriesComponents) {
     StringBuilder filterQuery = new StringBuilder();
     if (isFacetedRequest) {
       filterQuery.append(FACET_FILTER_TAG.replace(TAG_FIELD_PARAM, solrFieldName));
@@ -269,7 +270,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
         e = VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) pType);
       }
       if (value == null) {
-        throw new IllegalArgumentException("Value " + value + " invalid for filter parameter " + pType.getName());
+        throw new IllegalArgumentException("Value Null is invalid for filter parameter " + pType.getName());
       }
       interpretedValue = String.valueOf(e.ordinal());
 
@@ -300,7 +301,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
   /**
    * Helper method that sets the highlighting parameters.
-   * 
+   *
    * @param searchRequest the searchRequest used to extract the parameters
    * @param solrQuery this object is modified by adding the facets parameters
    */
@@ -317,7 +318,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
   /**
    * Sets the primary sort order query information.
-   * 
+   *
    * @param solrQuery to be modified.
    */
   private void setPrimarySortOrder(SolrQuery solrQuery) {
@@ -334,7 +335,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    * The output string will be in the format: (param1:vp1.1 OR param1:vp1.2) AND (param2:vf2.1 OR param2:vp2.2)...
    * The param-i key are taken from the key sets of the map and the vpi.j (value j of param i) are the entry set of the
    * map.
-   * 
+   *
    * @return the String containing a Solr filter query
    */
   private void setQueryFilter(final SearchRequest<P> searchRequest, SolrQuery solrQuery) {

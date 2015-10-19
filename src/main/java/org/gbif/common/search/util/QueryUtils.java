@@ -56,7 +56,7 @@ public class QueryUtils {
 
 
   private static final ImmutableMap<FacetField.Method, String> FACET_METHOD_MAP =
-    new ImmutableMap.Builder<FacetField.Method, String>()
+      new ImmutableMap.Builder<FacetField.Method, String>()
       .put(FacetField.Method.ENUM, FacetParams.FACET_METHOD_enum)
       .put(FacetField.Method.FIELD_CACHE, FacetParams.FACET_METHOD_fc)
       .put(FacetField.Method.FIELD_CACHE_SEGMENT, FacetParams.FACET_METHOD_fcs)
@@ -195,7 +195,7 @@ public class QueryUtils {
    */
   public static String escapeQuery(String value) {
     if (value.equals(QueryParser.Operator.AND.name()) || value.equals(QueryParser.Operator.OR.name())
-      || value.equals(SolrConstants.SOLR_NOT_OP)) {
+        || value.equals(SolrConstants.SOLR_NOT_OP)) {
       return toPhraseQuery(ClientUtils.escapeQueryChars(value));
     }
     return ClientUtils.escapeQueryChars(value);
@@ -219,10 +219,9 @@ public class QueryUtils {
    * @param solrQuery this object is modified adding the pagination parameters
    */
   public static void setQueryPaging(final Pageable pageable, SolrQuery solrQuery) {
-    final Integer pageSize = pageable.getLimit();
     final Long offset = pageable.getOffset();
-    solrQuery.setRows(pageSize == null ? DEFAULT_PAGE_SIZE : Math.min(pageSize, MAX_PAGE_SIZE));
-    solrQuery.setStart(offset == null ? 0 : offset.intValue());
+    solrQuery.setRows(Math.min(pageable.getLimit(), MAX_PAGE_SIZE));
+    solrQuery.setStart(Math.max(0,offset.intValue()));
   }
 
   /**
@@ -233,10 +232,9 @@ public class QueryUtils {
    * @param maxPageSize the maximum page size allowed
    */
   public static void setQueryPaging(final Pageable pageable, SolrQuery solrQuery, final Integer maxPageSize) {
-    final Integer pageSize = pageable.getLimit();
     final Long offset = pageable.getOffset();
-    solrQuery.setRows(pageSize == null ? DEFAULT_PAGE_SIZE : Math.min(pageSize, maxPageSize));
-    solrQuery.setStart(offset == null ? 0 : offset.intValue());
+    solrQuery.setRows( Math.min(pageable.getLimit(), maxPageSize));
+    solrQuery.setStart(Math.max(0,offset.intValue()));
   }
 
   /**
