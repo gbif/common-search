@@ -5,12 +5,12 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>21</version>
+    <version>23</version>
   </parent>
 
   <groupId>org.gbif</groupId>
   <artifactId>gbif-common-search</artifactId>
-  <version>0.23-SNAPSHOT</version>
+  <version>0.24-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>GBIF Common :: SOLR Search</name>
@@ -35,7 +35,7 @@
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <slf4j-api.version>1.7.10</slf4j-api.version>
-    <solr.version>5.3.1</solr.version>
+    <solr.version>4.10.3</solr.version>
     <httpclient.version>4.3.6</httpclient.version>
     <servlet-api.version>2.5</servlet-api.version>
   </properties>
