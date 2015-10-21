@@ -26,7 +26,7 @@ public class EmbeddedServerBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServerBuilder.class);
 
   // Default Solr configuration directory
-  private static final String SOLR_CONF = "solr/conf/";
+  private static final String SOLR_CONF = "solr/%s/conf/";
 
   // Solr home system variable
   private static final String SOLR_HOME = "solr.solr.home";
@@ -124,10 +124,12 @@ public class EmbeddedServerBuilder {
       File conf = new File(coreDir, "conf");
       ResourcesUtil.copy(conf, "solr/default/", false, SOLR_DEFAULT_RESOURCES);
       // copy specific configurations, overwriting above defaults
-      ResourcesUtil.copy(conf, SOLR_CONF, true, SOLR_CONF_DEFAULT_RESOURCES);
-      // create empty core.properties in core dir
+      ResourcesUtil.copy(conf, String.format(SOLR_CONF,coreName), true, SOLR_CONF_DEFAULT_RESOURCES);
       File coreProp = new File(coreDir, "core.properties");
-      coreProp.createNewFile();
+      if(!coreProp.exists()) {
+        // create empty core.properties in core dir
+        coreProp.createNewFile();
+      }
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }

@@ -20,7 +20,7 @@ public class SolrConfig {
 
   @Inject(optional = true)
   @Named("solr.collection")
-  public String collection = null;
+  public String collection = "collection1";
 
   @Inject(optional = true)
   @Named("solr.server.httpLbservers")

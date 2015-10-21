@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <config>
-  <luceneMatchVersion>LUCENE_4_10_3</luceneMatchVersion>
-  <lib dir="../../contrib/extraction/lib" regex=".*\.jar" />
-  <lib dir="../dist/" regex="solr-cell-\d.*\.jar" />
-  <lib dir="../../contrib/clustering/lib/" regex=".*\.jar" />
-  <lib dir="../dist/" regex="solr-clustering-\d.*\.jar" />
-  <lib dir="../../contrib/langid/lib/" regex=".*\.jar" />
-  <lib dir="../dist/" regex="solr-langid-\d.*\.jar" />
-  <lib dir="../../contrib/velocity/lib" regex=".*\.jar" />
-  <lib dir="../dist/" regex="solr-velocity-\d.*\.jar" />
+  <luceneMatchVersion>5.3.1</luceneMatchVersion>
 
   <!-- The DirectoryFactory to use for indexes.
-       
+
        solr.StandardDirectoryFactory is filesystem
        based and tries to pick the best implementation for the current
        JVM and platform.  solr.NRTCachingDirectoryFactory, the default,
@@ -64,12 +56,12 @@
          is thrown if exceeded.
 
          ** WARNING **
-         
+
          This option actually modifies a global Lucene property that
          will affect all SolrCores.  If multiple solrconfig.xml files
          disagree on this property, the value at any given moment will
          be based on the last SolrCore to be initialized.
-         
+
       -->
     <maxBooleanClauses>1024</maxBooleanClauses>
 
@@ -78,7 +70,7 @@
 
          There are two implementations of cache available for Solr,
          LRUCache, based on a synchronized LinkedHashMap, and
-         FastLRUCache, based on a ConcurrentHashMap.  
+         FastLRUCache, based on a ConcurrentHashMap.
 
          FastLRUCache has faster gets and slower puts in single
          threaded operation and thus is generally faster than LRUCache
@@ -103,7 +95,7 @@
            initialSize - the initial capacity (number of entries) of
                the cache.  (see java.util.HashMap)
            autowarmCount - the number of entries to prepopulate from
-               and old cache.  
+               and old cache.
       -->
     <filterCache class="solr.FastLRUCache"
                  size="512"
@@ -111,9 +103,9 @@
                  autowarmCount="0"/>
 
     <!-- Query Result Cache
-         
+
          Caches results of searches - ordered lists of document ids
-         (DocList) based on a query, a sort, and the range of documents requested.  
+         (DocList) based on a query, a sort, and the range of documents requested.
       -->
     <queryResultCache class="solr.LRUCache"
                       size="512"
@@ -124,7 +116,7 @@
 
          Caches Lucene Document objects (the stored fields for each
          document).  Since Lucene internal document ids are transient,
-         this cache will not be autowarmed.  
+         this cache will not be autowarmed.
       -->
     <documentCache class="solr.LRUCache"
                    size="512"
@@ -132,7 +124,7 @@
                    autowarmCount="0"/>
 
     <!-- Field Value Cache
-         
+
          Cache used to hold field values that are quickly accessible
          by document id.  The fieldValueCache is created by default
          even if not configured here.
@@ -187,7 +179,7 @@
 
       -->
     <!-- QuerySenderListener takes an array of NamedList and executes a
-         local query request for each NamedList in sequence. 
+         local query request for each NamedList in sequence.
       -->
     <listener event="newSearcher" class="solr.QuerySenderListener">
       <arr name="queries">
@@ -215,7 +207,7 @@
     <useColdSearcher>false</useColdSearcher>
 
     <!-- Max Warming Searchers
-         
+
          Maximum number of searchers that may be warming in the
          background concurrently.  An error is returned if this limit
          is exceeded.
@@ -237,7 +229,7 @@
        such as /select?qt=XXX
 
        handleSelect="true" will cause the SolrDispatchFilter to process
-       the request and dispatch the query to a handler specified by the 
+       the request and dispatch the query to a handler specified by the
        "qt" param, assuming "/select" isn't already registered.
 
        handleSelect="false" will cause the SolrDispatchFilter to
@@ -259,12 +251,12 @@
 
          multipartUploadLimitInKB - specifies the max size (in KiB) of
          Multipart File Uploads that Solr will allow in a Request.
-         
+
          formdataUploadLimitInKB - specifies the max size (in KiB) of
          form data (application/x-www-form-urlencoded) sent via
          POST. You can use POST to pass request parameters not
          fitting into the URL.
-         
+
          *** WARNING ***
          The settings below authorize Solr to fetch remote files, You
          should make sure your system has some authentication before
@@ -286,21 +278,21 @@
     <!-- If you include a <cacheControl> directive, it will be used to
          generate a Cache-Control header (as well as an Expires header
          if the value contains "max-age=")
-         
+
          By default, no Cache-Control header is generated.
-         
+
          You can use the <cacheControl> option even if you have set
          never304="true"
       -->
     <!--
        <httpCaching never304="true" >
-         <cacheControl>max-age=30, public</cacheControl> 
+         <cacheControl>max-age=30, public</cacheControl>
        </httpCaching>
       -->
     <!-- To enable Solr to respond with automatically generated HTTP
          Caching headers, and to response to Cache Validation requests
          correctly, set the value of never304="false"
-         
+
          This will cause Solr to generate Last-Modified and ETag
          headers based on the properties of the Index.
 
@@ -325,12 +317,12 @@
     <!--
        <httpCaching lastModifiedFrom="openTime"
                     etagSeed="Solr">
-         <cacheControl>max-age=30, public</cacheControl> 
+         <cacheControl>max-age=30, public</cacheControl>
        </httpCaching>
       -->
   </requestDispatcher>
 
-  <!-- Request Handlers 
+  <!-- Request Handlers
 
        http://wiki.apache.org/solr/SolrRequestHandler
 
@@ -392,7 +384,7 @@
   <!-- Admin Handlers
 
        Admin Handlers - This will register all the standard admin
-       RequestHandlers.  
+       RequestHandlers.
     -->
   <requestHandler name="/admin/" class="solr.admin.AdminHandlers" />
   <!-- This single handler is equivalent to the following... -->
@@ -414,28 +406,28 @@
       <str name="echoParams">all</str>
       <str name="df">scientific_name</str>
     </lst>
-    <!-- An optional feature of the PingRequestHandler is to configure the 
-         handler with a "healthcheckFile" which can be used to enable/disable 
+    <!-- An optional feature of the PingRequestHandler is to configure the
+         handler with a "healthcheckFile" which can be used to enable/disable
          the PingRequestHandler.
-         relative paths are resolved against the data dir 
+         relative paths are resolved against the data dir
       -->
     <!-- <str name="healthcheckFile">server-enabled.txt</str> -->
   </requestHandler>
 
   <!-- Search Components
 
-       Search components are registered to SolrCore and used by 
+       Search components are registered to SolrCore and used by
        instances of SearchHandler (which can access them by name)
-       
+
        By default, the following components are available:
-       
+
        <searchComponent name="query"     class="solr.QueryComponent" />
        <searchComponent name="facet"     class="solr.FacetComponent" />
        <searchComponent name="mlt"       class="solr.MoreLikeThisComponent" />
        <searchComponent name="highlight" class="solr.HighlightComponent" />
        <searchComponent name="stats"     class="solr.StatsComponent" />
        <searchComponent name="debug"     class="solr.DebugComponent" />
-   
+
        Default configuration in a requestHandler would look like:
 
        <arr name="components">
@@ -447,22 +439,22 @@
          <str>debug</str>
        </arr>
 
-       If you register a searchComponent to one of the standard names, 
+       If you register a searchComponent to one of the standard names,
        that will be used instead of the default.
 
        To insert components before or after the 'standard' components, use:
-    
+
        <arr name="first-components">
          <str>myFirstComponentName</str>
        </arr>
-    
+
        <arr name="last-components">
          <str>myLastComponentName</str>
        </arr>
 
        NOTE: The component registered with the name "debug" will
-       always be executed after the "last-components" 
-       
+       always be executed after the "last-components"
+
      -->
 
   <!-- Highlighting Component
@@ -479,8 +471,8 @@
         </lst>
       </fragmenter>
 
-      <!-- A regular-expression-based fragmenter 
-           (for sentence extraction) 
+      <!-- A regular-expression-based fragmenter
+           (for sentence extraction)
         -->
       <fragmenter name="regex" class="solr.highlight.RegexFragmenter">
         <lst name="defaults">
@@ -515,7 +507,7 @@
 
       <!-- default tag FragmentsBuilder -->
       <fragmentsBuilder name="default" default="true" class="solr.highlight.ScoreOrderFragmentsBuilder">
-        <!-- 
+        <!--
         <lst name="defaults">
           <str name="hl.multiValuedSeparatorChar">/</str>
         </lst>

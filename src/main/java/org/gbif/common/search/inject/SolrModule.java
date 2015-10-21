@@ -44,7 +44,7 @@ public class SolrModule extends PrivateModule {
     if (cfg.serverType == SolrServerType.EMBEDDED) {
       LOG.info("Using embedded solr server {}", cfg.serverHome);
       EmbeddedServerBuilder serverBuilder = new EmbeddedServerBuilder()
-          .withServerHomeDir(cfg.serverHome).withDeleteOnExit(cfg.deleteOnExit);
+          .withServerHomeDir(cfg.serverHome).withDeleteOnExit(cfg.deleteOnExit).withCoreName(cfg.collection);
       return serverBuilder.build();
     } else if (cfg.serverType == SolrServerType.LBHTTP) {
       try {
