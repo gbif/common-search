@@ -69,9 +69,11 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
   /**
    * Default constructor.
    *
-   * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
+   * @param solrClient Solr server instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param type of the results content
+   * @param solrType Solr response type
+   * @param enumSearchParamType type of the enum search parameter
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
   public SolrSearchService(SolrClient solrClient, Class<T> type, Class<ST> solrType,

@@ -43,8 +43,8 @@ public class AnnotationUtils {
    * @param clazz      to be analyzed
    * @param annotation to be searched
    */
-  public static Method getAnnotatedMethod(final Class<?> clazz, final Class<? extends Annotation> annotation) {
-    for (final Method method : clazz.getMethods()) {
+  public static Method getAnnotatedMethod(Class<?> clazz, Class<? extends Annotation> annotation) {
+    for (Method method : clazz.getMethods()) {
       if (method.isAnnotationPresent(annotation)) {
         return method;
       }
@@ -57,18 +57,18 @@ public class AnnotationUtils {
    *
    * @return name of the key field, null if no key field is defined.
    */
-  public static String getKeyField(final Class<?> anotatedClass) {
-    final Method method = getAnnotatedMethod(anotatedClass, Key.class);
+  public static String getKeyField(Class<?> annotatedClass) {
+    Method method = getAnnotatedMethod(annotatedClass, Key.class);
     if (method != null) {
-      for (final PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(anotatedClass)) {
-        final Method writeMethod = descriptor.getWriteMethod();
-        // PropertyDescriptor is not used directly to get the annotated method because a bug Beanutils class.
+      for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(annotatedClass)) {
+        Method writeMethod = descriptor.getWriteMethod();
+        // PropertyDescriptor is not used directly to get the annotated method because a bug BeanUtils class.
         if (writeMethod != null && writeMethod.getName().equals(method.getName())) {
           return descriptor.getName();
         }
       }
     }
-    LOG.error("Key field not found in class {}", anotatedClass.getName());
+    LOG.error("Key field not found in class {}", annotatedClass.getName());
     return null;
   }
 
@@ -80,10 +80,10 @@ public class AnnotationUtils {
    *
    * @return a map with SolrFieldName <-> FieldFacet definition.
    */
-  public static Map<String, FacetField> initFacetFieldDefs(final Class<?> annotatedClass) {
-    final Map<String, FacetField> fieldDefs = Maps.newHashMap();
+  public static Map<String, FacetField> initFacetFieldDefs(Class<?> annotatedClass) {
+    Map<String, FacetField> fieldDefs = Maps.newHashMap();
     if (annotatedClass.isAnnotationPresent(SearchMapping.class)) {
-      for (final FacetField f : annotatedClass.getAnnotation(SearchMapping.class).facets()) {
+      for (FacetField f : annotatedClass.getAnnotation(SearchMapping.class).facets()) {
         fieldDefs.put(f.field(), f);
       }
     }
@@ -97,17 +97,17 @@ public class AnnotationUtils {
    * Facet fields are case sensitive.
    */
   public static <P extends Enum<?> & SearchParameter> BiMap<String, P> initFacetFieldsPropertiesMap(
-      final Class<?> annotatedClass, final Class<P> enumClass) {
+      Class<?> annotatedClass, Class<P> enumClass) {
     BiMap<String, P> fieldsPropertiesMap = HashBiMap.create();
 
     if (annotatedClass.isAnnotationPresent(SearchMapping.class)) {
-      for (final FacetField annotation : annotatedClass.getAnnotation(SearchMapping.class).facets()) {
+      for (FacetField annotation : annotatedClass.getAnnotation(SearchMapping.class).facets()) {
         fieldsPropertiesMap.put(annotation.field(), VocabularyUtils.lookupEnum(annotation.name(), enumClass));
       }
     }
-    for (final Method method : annotatedClass.getMethods()) {
+    for (Method method : annotatedClass.getMethods()) {
       if (method.isAnnotationPresent(FacetField.class)) {
-        final FacetField annotation = method.getAnnotation(FacetField.class);
+        FacetField annotation = method.getAnnotation(FacetField.class);
         fieldsPropertiesMap.put(annotation.field(), VocabularyUtils.lookupEnum(annotation.name(), enumClass));
       }
     }
@@ -122,18 +122,18 @@ public class AnnotationUtils {
    *
    * @return a map with SolrFieldName <-> PropertyName.
    */
-  public static BiMap<String, String> initFieldsPropertiesMap(final Class<?> annotatedClass) {
+  public static BiMap<String, String> initFieldsPropertiesMap(Class<?> annotatedClass) {
     BiMap<String, String> fieldsPropertiesMap = HashBiMap.create();
 
     // we iterate over all methods and look for our custom annotations
-    final Method[] methods = annotatedClass.getMethods();
-    for (final Method m : methods) {
+    Method[] methods = annotatedClass.getMethods();
+    for (Method m : methods) {
       if (m.isAnnotationPresent(Field.class)) {
         // they should be on setters only
-        final Field annotation = m.getAnnotation(Field.class);
-        final String solrFieldName = annotation.value();
+        Field annotation = m.getAnnotation(Field.class);
+        String solrFieldName = annotation.value();
         // remove set and lowercase first char
-        final String propertyName =
+        String propertyName =
             new StringBuilder().append(Character.toLowerCase(m.getName().substring(3).charAt(0)))
             .append(m.getName().substring(4)).toString();
         fieldsPropertiesMap.put(solrFieldName, propertyName);
@@ -146,13 +146,13 @@ public class AnnotationUtils {
   /**
    * Helper method for initializing the map of SolrFields <-> Java fields mapped using an annotation type.
    */
-  public static List<FullTextSearchField> initFullTextFieldsPropertiesMap(final Class<?> annotatedClass) {
+  public static List<FullTextSearchField> initFullTextFieldsPropertiesMap(Class<?> annotatedClass) {
     List<FullTextSearchField> fullTextSearchFields = new ArrayList<FullTextSearchField>();
     if (annotatedClass.isAnnotationPresent(SearchMapping.class)) {
       fullTextSearchFields.addAll(Arrays.asList(annotatedClass.getAnnotation(SearchMapping.class).fulltextFields()));
     }
-    for (final PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(annotatedClass)) {
-      final Method writeMethod = descriptor.getWriteMethod();
+    for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(annotatedClass)) {
+      Method writeMethod = descriptor.getWriteMethod();
       if (writeMethod != null && writeMethod.isAnnotationPresent(FullTextSearchField.class)) {
         fullTextSearchFields.add(writeMethod.getAnnotation(FullTextSearchField.class));
       }

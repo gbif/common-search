@@ -73,10 +73,10 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
       throw new IllegalStateException(
         "Given class " + annotatedClass.getCanonicalName() + " is missing the SuggestField annotation");
     }
-    final SuggestMapping annotation = annotatedClass.getAnnotation(SuggestMapping.class);
-    final String phraseQueryField = annotation.phraseQueryField();
-    final String field = annotation.field();
-    final String phraseQuery = PARAMS_JOINER.join(phraseQueryField, toPhraseQuery(QUERY_PLACE_HOLDER));
+    SuggestMapping annotation = annotatedClass.getAnnotation(SuggestMapping.class);
+    String phraseQueryField = annotation.phraseQueryField();
+    String field = annotation.field();
+    String phraseQuery = PARAMS_JOINER.join(phraseQueryField, toPhraseQuery(QUERY_PLACE_HOLDER));
     phraseQueryTemplate = toBoostedQuery(phraseQuery, PHRASE_QUERY_BOOST, false);
     startPhraseQueryTemplate =
       toBoostedQuery(PARAMS_JOINER.join(phraseQueryField, QUERY_PLACE_HOLDER), PHRASE_QUERY_BOOST, false);

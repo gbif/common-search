@@ -9,6 +9,7 @@ import org.gbif.common.search.model.WildcardPadding;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -23,7 +24,6 @@ import org.apache.solr.parser.QueryParser;
 import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.BLANK;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_FILTER_QUERY;
-import static org.gbif.common.search.util.SolrConstants.DEFAULT_PAGE_SIZE;
 import static org.gbif.common.search.util.SolrConstants.HTTP_AND_OP;
 import static org.gbif.common.search.util.SolrConstants.MAX_PAGE_SIZE;
 import static org.gbif.common.search.util.SolrConstants.PARAM_AND_OP;
@@ -47,7 +47,12 @@ public class QueryUtils {
 
   public static final String ISO8601_FMT = "yyyy-MM-dd'T'00:00:00'Z'";
 
-  private static final String REGEX_MULTIPLE_BLANKS = "\\s(\\s)+";
+  private static final Pattern REGEX_MULTIPLE_BLANKS = Pattern.compile("\\s(\\s)+");
+
+  public static final String NOT_OP = "!";
+
+  private static final Pattern REGEX_NOT_OP = Pattern.compile(NOT_OP);
+
 
   private static final String SINGLE_BLANK = "\\ ";
 
@@ -104,7 +109,7 @@ public class QueryUtils {
    * Removes all the consecutive whitespaces and leave only 1.
    */
   public static String clearConsecutiveBlanks(String query) {
-    return query.replaceAll(REGEX_MULTIPLE_BLANKS, SINGLE_BLANK);
+    return REGEX_MULTIPLE_BLANKS.matcher(query).replaceAll(SINGLE_BLANK);
   }
 
   /**
@@ -152,7 +157,7 @@ public class QueryUtils {
    * Determines if the value is negated with the {@link SearchConstants#NOT_OP} operator.
    */
   public static boolean isNegated(String value) {
-    return value.startsWith(SearchConstants.NOT_OP);
+    return value.startsWith(NOT_OP);
   }
 
   /**
@@ -205,8 +210,8 @@ public class QueryUtils {
    * If the value parameter starts with {@link SearchConstants#NOT_OP} it is removed.
    */
   public static String removeNegation(String value) {
-    if (value.startsWith(SearchConstants.NOT_OP)) {
-      return value.replaceFirst(SearchConstants.NOT_OP, "");
+    if (value.startsWith(NOT_OP)) {
+      return REGEX_NOT_OP.matcher(value).replaceFirst("");
     }
     return value;
   }
@@ -218,10 +223,10 @@ public class QueryUtils {
    * @param pageable the Pageable used to extract the parameters
    * @param solrQuery this object is modified adding the pagination parameters
    */
-  public static void setQueryPaging(final Pageable pageable, SolrQuery solrQuery) {
-    final Long offset = pageable.getOffset();
+  public static void setQueryPaging(Pageable pageable, SolrQuery solrQuery) {
+    Long offset = pageable.getOffset();
     solrQuery.setRows(Math.min(pageable.getLimit(), MAX_PAGE_SIZE));
-    solrQuery.setStart(Math.max(0,offset.intValue()));
+    solrQuery.setStart(Math.max(0, offset.intValue()));
   }
 
   /**
@@ -231,10 +236,10 @@ public class QueryUtils {
    * @param solrQuery this object is modified adding the pagination parameters
    * @param maxPageSize the maximum page size allowed
    */
-  public static void setQueryPaging(final Pageable pageable, SolrQuery solrQuery, final Integer maxPageSize) {
-    final Long offset = pageable.getOffset();
-    solrQuery.setRows( Math.min(pageable.getLimit(), maxPageSize));
-    solrQuery.setStart(Math.max(0,offset.intValue()));
+  public static void setQueryPaging(Pageable pageable, SolrQuery solrQuery, Integer maxPageSize) {
+    Long offset = pageable.getOffset();
+    solrQuery.setRows(Math.min(pageable.getLimit(), maxPageSize));
+    solrQuery.setStart(Math.max(0, offset.intValue()));
   }
 
   /**
@@ -281,9 +286,9 @@ public class QueryUtils {
    */
   public static String toBoostedQuery(String query, Integer boostValue, boolean withParentheses) {
     if (withParentheses) {
-      return toParenthesesQuery(query + SCORE_OP + boostValue.toString());
+      return toParenthesesQuery(query + SCORE_OP + boostValue);
     }
-    return query + SCORE_OP + boostValue.toString();
+    return query + SCORE_OP + boostValue;
   }
 
   /**
@@ -311,7 +316,7 @@ public class QueryUtils {
   }
 
   /**
-   * Sets the Solr facet.method for the field parameter accoding to the method parameter.
+   * Sets the Solr facet.method for the field parameter according to the method parameter.
    */
   public static void setFacetMethod(SolrQuery solrQuery, String field, FacetField.Method facetFieldMethod) {
     solrQuery.setParam(String.format(FACET_METHOD_FMT, field), FACET_METHOD_MAP.get(facetFieldMethod));

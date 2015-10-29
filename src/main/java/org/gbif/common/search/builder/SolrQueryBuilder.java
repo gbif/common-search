@@ -258,7 +258,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
   /**
    * Interprets the value of parameter "value" using types pType (Parameter type) and eType (Enumeration).
    */
-  private String getInterpretedValue(final Class<?> pType, final String value) {
+  private static String getInterpretedValue(final Class<?> pType, final String value) {
     // By default use a phrase query is surrounded by "
     String interpretedValue = APOSTROPHE + value + APOSTROPHE;
     if (Enum.class.isAssignableFrom(pType)) {
@@ -349,13 +349,13 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
           continue;
         }
         // solr field for this parameter
-        final String solrFieldName = fieldsPropertiesMapInv.get(param);
+        String solrFieldName = fieldsPropertiesMapInv.get(param);
 
         List<String> filterQueriesComponents = Lists.newArrayList();
         for (String paramValue : params.get(param)) {
           // Negate expression is removed if it is present
-          final String interpretedValue = getInterpretedValue(param.type(), removeNegation(paramValue));
-          final String queryComponent = PARAMS_JOINER.join(solrFieldName, interpretedValue);
+          String interpretedValue = getInterpretedValue(param.type(), removeNegation(paramValue));
+          String queryComponent = PARAMS_JOINER.join(solrFieldName, interpretedValue);
 
           filterQueriesComponents.add(isNegated(paramValue) ? NOT_OP + queryComponent : queryComponent);
         }

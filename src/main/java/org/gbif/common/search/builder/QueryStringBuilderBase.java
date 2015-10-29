@@ -87,7 +87,7 @@ public abstract class QueryStringBuilderBase {
    *
    * @return a string with all the query components.
    */
-  protected String buildQueryExpression(List<String> queryComponets) {
+  protected static String buildQueryExpression(List<String> queryComponets) {
     if (!queryComponets.isEmpty()) {
       return '(' + PARAMS_OR_JOINER.join(queryComponets) + ')';
     }
@@ -110,20 +110,6 @@ public abstract class QueryStringBuilderBase {
    * Helper method that sets the parameters for full text search param "q".
    * It will also add the optional query function.
    */
-  abstract protected void initTemplates(Class<?> annotatedClass);
+  protected abstract void initTemplates(Class<?> annotatedClass);
 
-  /**
-   * Sets the filters for wildcard (if applicable) queries.
-   */
-  private void setWildcardFilters(List<String> fullTextQueryComponents, List<String> phraseQueryComponents,
-    FullTextSearchField field, String exactMatchField) {
-    if (field.partialMatching() != WildcardPadding.NONE) {
-      fullTextQueryComponents
-        .add(PARAMS_JOINER.join(field.field(), getMatchPatternAndScore(field, QUERY_PLACE_HOLDER)));
-      if (!exactMatchField.equals(field.field())) {
-        phraseQueryComponents
-          .add(PARAMS_JOINER.join(field.field(), QUERY_PLACE_HOLDER + SCORE_OP + field.partialMatchScore()));
-      }
-    }
-  }
 }

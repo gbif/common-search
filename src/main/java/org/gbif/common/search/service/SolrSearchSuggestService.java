@@ -131,15 +131,12 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
 
     try {
       SolrQuery solrQuery = suggestQueryBuilder.build(suggestRequest);
-      final QueryResponse queryResponse = getSolrClient().query(solrQuery);
+      QueryResponse queryResponse = getSolrClient().query(solrQuery);
       return (List<SUGT>) SearchResponseBuilder.buildSuggestReponse(suggestRequest, queryResponse,
         suggestAnnotatedClass)
         .getResults();
 
-    } catch (SolrServerException e) {
-      LOG.error("Error executing/building the request", e);
-      throw new SearchException(e);
-    } catch (IOException e) {
+    } catch (SolrServerException | IOException e) {
       LOG.error("Error executing/building the request", e);
       throw new SearchException(e);
     }

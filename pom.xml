@@ -13,7 +13,7 @@
   <version>0.24-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>GBIF Common :: SOLR Search</name>
+  <name>GBIF Common :: Search</name>
   <url>http://github.org/gbif/common-search</url>
 
   <scm>
