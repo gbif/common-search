@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.gbif.common.search.util;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.gbif.api.model.common.paging.Pageable;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.gbif.api.util.SearchTypeValidator;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.gbif.common.search.model.FacetField;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.gbif.common.search.model.FullTextSearchField;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.gbif.common.search.model.WildcardPadding;<a name="line.7"></a>
+<span class="sourceLineNo">008</span><a name="line.8"></a>
+<span class="sourceLineNo">009</span>import java.text.SimpleDateFormat;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import java.util.Date;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import java.util.Map;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import java.util.regex.Pattern;<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>import com.google.common.base.Joiner;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import com.google.common.base.Strings;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import com.google.common.collect.ImmutableMap;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.apache.solr.client.solrj.SolrQuery;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.apache.solr.client.solrj.util.ClientUtils;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.apache.solr.common.params.CommonParams;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.apache.solr.common.params.FacetParams;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.apache.solr.common.params.TermsParams;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.apache.solr.parser.QueryParser;<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import static org.gbif.common.search.util.SolrConstants.BLANK;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import static org.gbif.common.search.util.SolrConstants.DEFAULT_FILTER_QUERY;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import static org.gbif.common.search.util.SolrConstants.HTTP_AND_OP;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import static org.gbif.common.search.util.SolrConstants.MAX_PAGE_SIZE;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import static org.gbif.common.search.util.SolrConstants.PARAM_AND_OP;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import static org.gbif.common.search.util.SolrConstants.PARAM_OR_OP;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import static org.gbif.common.search.util.SolrConstants.PARAM_VALUE_SEP;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import static org.gbif.common.search.util.SolrConstants.PARENTHESES_EXP_FORMAT;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import static org.gbif.common.search.util.SolrConstants.SCORE_OP;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import static org.gbif.common.search.util.SolrConstants.TERMS_COMP_PATH;<a name="line.34"></a>
+<span class="sourceLineNo">035</span><a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span>/**<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * Utility class for common query methods.<a name="line.38"></a>
+<span class="sourceLineNo">039</span> */<a name="line.39"></a>
+<span class="sourceLineNo">040</span>public class QueryUtils {<a name="line.40"></a>
+<span class="sourceLineNo">041</span><a name="line.41"></a>
+<span class="sourceLineNo">042</span>  // Solr parameters joiners<a name="line.42"></a>
+<span class="sourceLineNo">043</span>  public static final Joiner PARAMS_JOINER = Joiner.on(PARAM_VALUE_SEP).skipNulls();<a name="line.43"></a>
+<span class="sourceLineNo">044</span>  public static final Joiner PARAMS_OR_JOINER = Joiner.on(PARAM_OR_OP).skipNulls();<a name="line.44"></a>
+<span class="sourceLineNo">045</span>  public static final Joiner PARAMS_AND_JOINER = Joiner.on(PARAM_AND_OP).skipNulls();<a name="line.45"></a>
+<span class="sourceLineNo">046</span>  public static final Joiner HTTP_PARAMS_JOINER = Joiner.on(HTTP_AND_OP).skipNulls();<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>  public static final String ISO8601_FMT = "yyyy-MM-dd'T'00:00:00'Z'";<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>  private static final Pattern REGEX_MULTIPLE_BLANKS = Pattern.compile("\\s(\\s)+");<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>  public static final String NOT_OP = "!";<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>  private static final Pattern REGEX_NOT_OP = Pattern.compile(NOT_OP);<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span><a name="line.56"></a>
+<span class="sourceLineNo">057</span>  private static final String SINGLE_BLANK = "\\ ";<a name="line.57"></a>
+<span class="sourceLineNo">058</span><a name="line.58"></a>
+<span class="sourceLineNo">059</span>  // Pattern for setting the facet method on single field<a name="line.59"></a>
+<span class="sourceLineNo">060</span>  private static final String FACET_METHOD_FMT = "f.%s" + FacetParams.FACET_METHOD;<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>  private static final ImmutableMap&lt;FacetField.Method, String&gt; FACET_METHOD_MAP =<a name="line.63"></a>
+<span class="sourceLineNo">064</span>      new ImmutableMap.Builder&lt;FacetField.Method, String&gt;()<a name="line.64"></a>
+<span class="sourceLineNo">065</span>      .put(FacetField.Method.ENUM, FacetParams.FACET_METHOD_enum)<a name="line.65"></a>
+<span class="sourceLineNo">066</span>      .put(FacetField.Method.FIELD_CACHE, FacetParams.FACET_METHOD_fc)<a name="line.66"></a>
+<span class="sourceLineNo">067</span>      .put(FacetField.Method.FIELD_CACHE_SEGMENT, FacetParams.FACET_METHOD_fcs)<a name="line.67"></a>
+<span class="sourceLineNo">068</span>      .build();<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>  /**<a name="line.70"></a>
+<span class="sourceLineNo">071</span>   * Default private/hidden constructor.<a name="line.71"></a>
+<span class="sourceLineNo">072</span>   */<a name="line.72"></a>
+<span class="sourceLineNo">073</span>  private QueryUtils() {<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    // empty block<a name="line.74"></a>
+<span class="sourceLineNo">075</span>  }<a name="line.75"></a>
+<span class="sourceLineNo">076</span><a name="line.76"></a>
+<span class="sourceLineNo">077</span>  /**<a name="line.77"></a>
+<span class="sourceLineNo">078</span>   * Builds SolrQuery suitable to the TermsComponent.<a name="line.78"></a>
+<span class="sourceLineNo">079</span>   *<a name="line.79"></a>
+<span class="sourceLineNo">080</span>   * @param fieldName solr field to be searched<a name="line.80"></a>
+<span class="sourceLineNo">081</span>   * @param limit maximum number of results<a name="line.81"></a>
+<span class="sourceLineNo">082</span>   * @return a {@link SolrQuery}<a name="line.82"></a>
+<span class="sourceLineNo">083</span>   */<a name="line.83"></a>
+<span class="sourceLineNo">084</span>  public static SolrQuery buildTermQuery(String fieldName, Integer limit) {<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    SolrQuery solrQuery = new SolrQuery();<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    solrQuery.setParam(CommonParams.QT, TERMS_COMP_PATH);<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    solrQuery.setParam(TermsParams.TERMS, true);<a name="line.87"></a>
+<span class="sourceLineNo">088</span>    solrQuery.setParam(TermsParams.TERMS_LIMIT, limit.toString());<a name="line.88"></a>
+<span class="sourceLineNo">089</span>    solrQuery.setParam(TermsParams.TERMS_FIELD, fieldName);<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    solrQuery.setParam(TermsParams.TERMS_SORT, TermsParams.TERMS_SORT_INDEX);<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    return solrQuery;<a name="line.91"></a>
+<span class="sourceLineNo">092</span>  }<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>  /**<a name="line.94"></a>
+<span class="sourceLineNo">095</span>   * Builds SolrQuery suitable to the TermsComponent.<a name="line.95"></a>
+<span class="sourceLineNo">096</span>   *<a name="line.96"></a>
+<span class="sourceLineNo">097</span>   * @param prefix search term<a name="line.97"></a>
+<span class="sourceLineNo">098</span>   * @param fieldName solr field to be searched<a name="line.98"></a>
+<span class="sourceLineNo">099</span>   * @param limit maximum number of results<a name="line.99"></a>
+<span class="sourceLineNo">100</span>   * @return a {@link SolrQuery}<a name="line.100"></a>
+<span class="sourceLineNo">101</span>   */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>  public static SolrQuery buildTermQuery(String prefix, String fieldName, Integer limit) {<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    SolrQuery solrQuery = buildTermQuery(fieldName, limit);<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    solrQuery.setParam(TermsParams.TERMS_PREFIX_STR, prefix);<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    return solrQuery;<a name="line.105"></a>
+<span class="sourceLineNo">106</span>  }<a name="line.106"></a>
+<span class="sourceLineNo">107</span><a name="line.107"></a>
+<span class="sourceLineNo">108</span>  /**<a name="line.108"></a>
+<span class="sourceLineNo">109</span>   * Removes all the consecutive whitespaces and leave only 1.<a name="line.109"></a>
+<span class="sourceLineNo">110</span>   */<a name="line.110"></a>
+<span class="sourceLineNo">111</span>  public static String clearConsecutiveBlanks(String query) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    return REGEX_MULTIPLE_BLANKS.matcher(query).replaceAll(SINGLE_BLANK);<a name="line.112"></a>
+<span class="sourceLineNo">113</span>  }<a name="line.113"></a>
+<span class="sourceLineNo">114</span><a name="line.114"></a>
+<span class="sourceLineNo">115</span>  /**<a name="line.115"></a>
+<span class="sourceLineNo">116</span>   * If the query parameter is empty returns the default query "*".<a name="line.116"></a>
+<span class="sourceLineNo">117</span>   *<a name="line.117"></a>
+<span class="sourceLineNo">118</span>   * @return default query if q parameter is empty<a name="line.118"></a>
+<span class="sourceLineNo">119</span>   */<a name="line.119"></a>
+<span class="sourceLineNo">120</span>  public static String emptyToDefaultQuery(String q) {<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    // return default query for empty queries<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    String qValue = Strings.nullToEmpty(q).trim();<a name="line.122"></a>
+<span class="sourceLineNo">123</span>    if (Strings.isNullOrEmpty(qValue)) {<a name="line.123"></a>
+<span class="sourceLineNo">124</span>      return DEFAULT_FILTER_QUERY;<a name="line.124"></a>
+<span class="sourceLineNo">125</span>    }<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    return qValue;<a name="line.126"></a>
+<span class="sourceLineNo">127</span>  }<a name="line.127"></a>
+<span class="sourceLineNo">128</span><a name="line.128"></a>
+<span class="sourceLineNo">129</span>  /**<a name="line.129"></a>
+<span class="sourceLineNo">130</span>   * Utility method that return the exact matching field to use.<a name="line.130"></a>
+<span class="sourceLineNo">131</span>   * If field.exactMatchField is null or empty, return field.field() else return field.exactMatchField().<a name="line.131"></a>
+<span class="sourceLineNo">132</span>   */<a name="line.132"></a>
+<span class="sourceLineNo">133</span>  public static String getExactMatchField(FullTextSearchField field) {<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    return Strings.isNullOrEmpty(field.exactMatchField()) ? field.field() : field.exactMatchField();<a name="line.134"></a>
+<span class="sourceLineNo">135</span>  }<a name="line.135"></a>
+<span class="sourceLineNo">136</span><a name="line.136"></a>
+<span class="sourceLineNo">137</span>  /**<a name="line.137"></a>
+<span class="sourceLineNo">138</span>   * According to the FullTextSearchField.partialMatching() returns a search pattern that could contains wildcards.<a name="line.138"></a>
+<span class="sourceLineNo">139</span>   *<a name="line.139"></a>
+<span class="sourceLineNo">140</span>   * @param field the Annotation to be analyzed<a name="line.140"></a>
+<span class="sourceLineNo">141</span>   * @param query the input search pattern<a name="line.141"></a>
+<span class="sourceLineNo">142</span>   */<a name="line.142"></a>
+<span class="sourceLineNo">143</span>  public static String getMatchPatternAndScore(FullTextSearchField field, String query) {<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    if (field.partialMatching() == WildcardPadding.BOTH) {<a name="line.144"></a>
+<span class="sourceLineNo">145</span>      return DEFAULT_FILTER_QUERY + query + DEFAULT_FILTER_QUERY + SCORE_OP + field.partialMatchScore();<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    } else if (field.partialMatching() == WildcardPadding.LEFT) {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>      return DEFAULT_FILTER_QUERY + query + SCORE_OP + field.partialMatchScore();<a name="line.147"></a>
+<span class="sourceLineNo">148</span>    } else if (field.partialMatching() == WildcardPadding.RIGHT) {<a name="line.148"></a>
+<span class="sourceLineNo">149</span>      return query + DEFAULT_FILTER_QUERY + SCORE_OP + field.partialMatchScore();<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    } else { // NONE<a name="line.150"></a>
+<span class="sourceLineNo">151</span>      return query;<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    }<a name="line.152"></a>
+<span class="sourceLineNo">153</span>  }<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span><a name="line.155"></a>
+<span class="sourceLineNo">156</span>  /**<a name="line.156"></a>
+<span class="sourceLineNo">157</span>   * Determines if the value is negated with the {@link SearchConstants#NOT_OP} operator.<a name="line.157"></a>
+<span class="sourceLineNo">158</span>   */<a name="line.158"></a>
+<span class="sourceLineNo">159</span>  public static boolean isNegated(String value) {<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    return value.startsWith(NOT_OP);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>  }<a name="line.161"></a>
+<span class="sourceLineNo">162</span><a name="line.162"></a>
+<span class="sourceLineNo">163</span>  /**<a name="line.163"></a>
+<span class="sourceLineNo">164</span>   * Checks if the value parameters is a Range query.<a name="line.164"></a>
+<span class="sourceLineNo">165</span>   */<a name="line.165"></a>
+<span class="sourceLineNo">166</span>  public static boolean isRangeQuery(String value) {<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    return SearchTypeValidator.isRange(value);<a name="line.167"></a>
+<span class="sourceLineNo">168</span>  }<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>  /**<a name="line.170"></a>
+<span class="sourceLineNo">171</span>   * Escapes a query value and transform it into a phrase query if necessary.<a name="line.171"></a>
+<span class="sourceLineNo">172</span>   */<a name="line.172"></a>
+<span class="sourceLineNo">173</span>  public static String parseQueryValue(final String q) {<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    // return default query for empty queries<a name="line.174"></a>
+<span class="sourceLineNo">175</span>    String qValue = Strings.nullToEmpty(q).trim();<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    if (Strings.isNullOrEmpty(qValue)) {<a name="line.176"></a>
+<span class="sourceLineNo">177</span>      return DEFAULT_FILTER_QUERY;<a name="line.177"></a>
+<span class="sourceLineNo">178</span>    }<a name="line.178"></a>
+<span class="sourceLineNo">179</span>    if (isRangeQuery(qValue)) {<a name="line.179"></a>
+<span class="sourceLineNo">180</span>      String[] rangeValue = qValue.split(",");<a name="line.180"></a>
+<span class="sourceLineNo">181</span>      if (rangeValue.length == 2) {<a name="line.181"></a>
+<span class="sourceLineNo">182</span>        return String.format(SolrConstants.RANGE_FORMAT, rangeValue[0].trim(), rangeValue[1].trim());<a name="line.182"></a>
+<span class="sourceLineNo">183</span>      }<a name="line.183"></a>
+<span class="sourceLineNo">184</span>    } else {<a name="line.184"></a>
+<span class="sourceLineNo">185</span>      // If default query was sent, must not be escaped<a name="line.185"></a>
+<span class="sourceLineNo">186</span>      if (!qValue.equals(DEFAULT_FILTER_QUERY)) {<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        qValue = clearConsecutiveBlanks(qValue);<a name="line.187"></a>
+<span class="sourceLineNo">188</span>        qValue = escapeQuery(qValue);<a name="line.188"></a>
+<span class="sourceLineNo">189</span>      }<a name="line.189"></a>
+<span class="sourceLineNo">190</span>      // make it a phrase query if it contains blanks<a name="line.190"></a>
+<span class="sourceLineNo">191</span>      if (qValue.contains(BLANK)) {<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        qValue = toPhraseQuery(qValue);<a name="line.192"></a>
+<span class="sourceLineNo">193</span>      }<a name="line.193"></a>
+<span class="sourceLineNo">194</span>    }<a name="line.194"></a>
+<span class="sourceLineNo">195</span>    return qValue;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>  }<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>  /**<a name="line.198"></a>
+<span class="sourceLineNo">199</span>   * Escape special characters and Solr reserved words.<a name="line.199"></a>
+<span class="sourceLineNo">200</span>   */<a name="line.200"></a>
+<span class="sourceLineNo">201</span>  public static String escapeQuery(String value) {<a name="line.201"></a>
+<span class="sourceLineNo">202</span>    if (value.equals(QueryParser.Operator.AND.name()) || value.equals(QueryParser.Operator.OR.name())<a name="line.202"></a>
+<span class="sourceLineNo">203</span>        || value.equals(SolrConstants.SOLR_NOT_OP)) {<a name="line.203"></a>
+<span class="sourceLineNo">204</span>      return toPhraseQuery(ClientUtils.escapeQueryChars(value));<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    }<a name="line.205"></a>
+<span class="sourceLineNo">206</span>    return ClientUtils.escapeQueryChars(value);<a name="line.206"></a>
+<span class="sourceLineNo">207</span>  }<a name="line.207"></a>
+<span class="sourceLineNo">208</span><a name="line.208"></a>
+<span class="sourceLineNo">209</span>  /**<a name="line.209"></a>
+<span class="sourceLineNo">210</span>   * If the value parameter starts with {@link SearchConstants#NOT_OP} it is removed.<a name="line.210"></a>
+<span class="sourceLineNo">211</span>   */<a name="line.211"></a>
+<span class="sourceLineNo">212</span>  public static String removeNegation(String value) {<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    if (value.startsWith(NOT_OP)) {<a name="line.213"></a>
+<span class="sourceLineNo">214</span>      return REGEX_NOT_OP.matcher(value).replaceFirst("");<a name="line.214"></a>
+<span class="sourceLineNo">215</span>    }<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    return value;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>  }<a name="line.217"></a>
+<span class="sourceLineNo">218</span><a name="line.218"></a>
+<span class="sourceLineNo">219</span><a name="line.219"></a>
+<span class="sourceLineNo">220</span>  /**<a name="line.220"></a>
+<span class="sourceLineNo">221</span>   * Helper method that sets the parameters for a paginated query.<a name="line.221"></a>
+<span class="sourceLineNo">222</span>   *<a name="line.222"></a>
+<span class="sourceLineNo">223</span>   * @param pageable the Pageable used to extract the parameters<a name="line.223"></a>
+<span class="sourceLineNo">224</span>   * @param solrQuery this object is modified adding the pagination parameters<a name="line.224"></a>
+<span class="sourceLineNo">225</span>   */<a name="line.225"></a>
+<span class="sourceLineNo">226</span>  public static void setQueryPaging(Pageable pageable, SolrQuery solrQuery) {<a name="line.226"></a>
+<span class="sourceLineNo">227</span>    Long offset = pageable.getOffset();<a name="line.227"></a>
+<span class="sourceLineNo">228</span>    solrQuery.setRows(Math.min(pageable.getLimit(), MAX_PAGE_SIZE));<a name="line.228"></a>
+<span class="sourceLineNo">229</span>    solrQuery.setStart(Math.max(0, offset.intValue()));<a name="line.229"></a>
+<span class="sourceLineNo">230</span>  }<a name="line.230"></a>
+<span class="sourceLineNo">231</span><a name="line.231"></a>
+<span class="sourceLineNo">232</span>  /**<a name="line.232"></a>
+<span class="sourceLineNo">233</span>   * Helper method that sets the parameters for a paginated query.<a name="line.233"></a>
+<span class="sourceLineNo">234</span>   *<a name="line.234"></a>
+<span class="sourceLineNo">235</span>   * @param pageable the Pageable used to extract the parameters<a name="line.235"></a>
+<span class="sourceLineNo">236</span>   * @param solrQuery this object is modified adding the pagination parameters<a name="line.236"></a>
+<span class="sourceLineNo">237</span>   * @param maxPageSize the maximum page size allowed<a name="line.237"></a>
+<span class="sourceLineNo">238</span>   */<a name="line.238"></a>
+<span class="sourceLineNo">239</span>  public static void setQueryPaging(Pageable pageable, SolrQuery solrQuery, Integer maxPageSize) {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    Long offset = pageable.getOffset();<a name="line.240"></a>
+<span class="sourceLineNo">241</span>    solrQuery.setRows(Math.min(pageable.getLimit(), maxPageSize));<a name="line.241"></a>
+<span class="sourceLineNo">242</span>    solrQuery.setStart(Math.max(0, offset.intValue()));<a name="line.242"></a>
+<span class="sourceLineNo">243</span>  }<a name="line.243"></a>
+<span class="sourceLineNo">244</span><a name="line.244"></a>
+<span class="sourceLineNo">245</span>  /**<a name="line.245"></a>
+<span class="sourceLineNo">246</span>   * Adds the qt parameter if necessary.<a name="line.246"></a>
+<span class="sourceLineNo">247</span>   *<a name="line.247"></a>
+<span class="sourceLineNo">248</span>   * @param solrQuery to be modified.<a name="line.248"></a>
+<span class="sourceLineNo">249</span>   */<a name="line.249"></a>
+<span class="sourceLineNo">250</span>  public static void setRequestHandler(SolrQuery solrQuery, String requestHandler) {<a name="line.250"></a>
+<span class="sourceLineNo">251</span>    if (!Strings.isNullOrEmpty(requestHandler)) {<a name="line.251"></a>
+<span class="sourceLineNo">252</span>      solrQuery.setRequestHandler(requestHandler);<a name="line.252"></a>
+<span class="sourceLineNo">253</span>    }<a name="line.253"></a>
+<span class="sourceLineNo">254</span>  }<a name="line.254"></a>
+<span class="sourceLineNo">255</span><a name="line.255"></a>
+<span class="sourceLineNo">256</span>  /**<a name="line.256"></a>
+<span class="sourceLineNo">257</span>   * Adds the shards parameter if necessary.<a name="line.257"></a>
+<span class="sourceLineNo">258</span>   *<a name="line.258"></a>
+<span class="sourceLineNo">259</span>   * @param solrQuery to be modified.<a name="line.259"></a>
+<span class="sourceLineNo">260</span>   */<a name="line.260"></a>
+<span class="sourceLineNo">261</span>  public static void setShardsInfo(SolrQuery solrQuery, String shards) {<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    if (!Strings.isNullOrEmpty(shards)) {<a name="line.262"></a>
+<span class="sourceLineNo">263</span>      solrQuery.set("shards", shards);<a name="line.263"></a>
+<span class="sourceLineNo">264</span>    }<a name="line.264"></a>
+<span class="sourceLineNo">265</span>  }<a name="line.265"></a>
+<span class="sourceLineNo">266</span><a name="line.266"></a>
+<span class="sourceLineNo">267</span>  /**<a name="line.267"></a>
+<span class="sourceLineNo">268</span>   * Sets the sort order query information.<a name="line.268"></a>
+<span class="sourceLineNo">269</span>   *<a name="line.269"></a>
+<span class="sourceLineNo">270</span>   * @param solrQuery to be modified.<a name="line.270"></a>
+<span class="sourceLineNo">271</span>   */<a name="line.271"></a>
+<span class="sourceLineNo">272</span>  public static void setSortOrder(SolrQuery solrQuery, Map&lt;String, SolrQuery.ORDER&gt; sortOrder) {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>    if (sortOrder != null) {<a name="line.273"></a>
+<span class="sourceLineNo">274</span>      for (Map.Entry&lt;String, SolrQuery.ORDER&gt; so : sortOrder.entrySet()) {<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        solrQuery.addSort(so.getKey(), so.getValue());<a name="line.275"></a>
+<span class="sourceLineNo">276</span>      }<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    }<a name="line.277"></a>
+<span class="sourceLineNo">278</span>  }<a name="line.278"></a>
+<span class="sourceLineNo">279</span><a name="line.279"></a>
+<span class="sourceLineNo">280</span>  /**<a name="line.280"></a>
+<span class="sourceLineNo">281</span>   * Produces a query with the form: "(query)^boostValue".<a name="line.281"></a>
+<span class="sourceLineNo">282</span>   *<a name="line.282"></a>
+<span class="sourceLineNo">283</span>   * @param query to be boosted<a name="line.283"></a>
+<span class="sourceLineNo">284</span>   * @param boostValue Solr boost factor<a name="line.284"></a>
+<span class="sourceLineNo">285</span>   * @return a query in format "(query)^boostValue."<a name="line.285"></a>
+<span class="sourceLineNo">286</span>   */<a name="line.286"></a>
+<span class="sourceLineNo">287</span>  public static String toBoostedQuery(String query, Integer boostValue, boolean withParentheses) {<a name="line.287"></a>
+<span class="sourceLineNo">288</span>    if (withParentheses) {<a name="line.288"></a>
+<span class="sourceLineNo">289</span>      return toParenthesesQuery(query + SCORE_OP + boostValue);<a name="line.289"></a>
+<span class="sourceLineNo">290</span>    }<a name="line.290"></a>
+<span class="sourceLineNo">291</span>    return query + SCORE_OP + boostValue;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>  }<a name="line.292"></a>
+<span class="sourceLineNo">293</span><a name="line.293"></a>
+<span class="sourceLineNo">294</span>  /**<a name="line.294"></a>
+<span class="sourceLineNo">295</span>   * Transforms a Date instance into a String using the default date parser.<a name="line.295"></a>
+<span class="sourceLineNo">296</span>   */<a name="line.296"></a>
+<span class="sourceLineNo">297</span>  public static String toDateQueryFormat(Date value) {<a name="line.297"></a>
+<span class="sourceLineNo">298</span>    return new SimpleDateFormat(ISO8601_FMT).format(value);<a name="line.298"></a>
+<span class="sourceLineNo">299</span>  }<a name="line.299"></a>
+<span class="sourceLineNo">300</span><a name="line.300"></a>
+<span class="sourceLineNo">301</span><a name="line.301"></a>
+<span class="sourceLineNo">302</span>  /**<a name="line.302"></a>
+<span class="sourceLineNo">303</span>   * Transforms the query into query surrounded by parentheses.<a name="line.303"></a>
+<span class="sourceLineNo">304</span>   */<a name="line.304"></a>
+<span class="sourceLineNo">305</span>  public static String toParenthesesQuery(String query) {<a name="line.305"></a>
+<span class="sourceLineNo">306</span>    return String.format(PARENTHESES_EXP_FORMAT, query);<a name="line.306"></a>
+<span class="sourceLineNo">307</span>  }<a name="line.307"></a>
+<span class="sourceLineNo">308</span><a name="line.308"></a>
+<span class="sourceLineNo">309</span>  /**<a name="line.309"></a>
+<span class="sourceLineNo">310</span>   * Adds the apostrophes to convert the input pattern into a phrase query pattern.<a name="line.310"></a>
+<span class="sourceLineNo">311</span>   *<a name="line.311"></a>
+<span class="sourceLineNo">312</span>   * @param query the input search pattern<a name="line.312"></a>
+<span class="sourceLineNo">313</span>   */<a name="line.313"></a>
+<span class="sourceLineNo">314</span>  public static String toPhraseQuery(String query) {<a name="line.314"></a>
+<span class="sourceLineNo">315</span>    return APOSTROPHE + query + APOSTROPHE;<a name="line.315"></a>
+<span class="sourceLineNo">316</span>  }<a name="line.316"></a>
+<span class="sourceLineNo">317</span><a name="line.317"></a>
+<span class="sourceLineNo">318</span>  /**<a name="line.318"></a>
+<span class="sourceLineNo">319</span>   * Sets the Solr facet.method for the field parameter according to the method parameter.<a name="line.319"></a>
+<span class="sourceLineNo">320</span>   */<a name="line.320"></a>
+<span class="sourceLineNo">321</span>  public static void setFacetMethod(SolrQuery solrQuery, String field, FacetField.Method facetFieldMethod) {<a name="line.321"></a>
+<span class="sourceLineNo">322</span>    solrQuery.setParam(String.format(FACET_METHOD_FMT, field), FACET_METHOD_MAP.get(facetFieldMethod));<a name="line.322"></a>
+<span class="sourceLineNo">323</span>  }<a name="line.323"></a>
+<span class="sourceLineNo">324</span>}<a name="line.324"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

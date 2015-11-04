@@ -1,0 +1,8 @@
+org.gbif.common.search.builder
+org.gbif.common.search.exception
+org.gbif.common.search.inject
+org.gbif.common.search.model
+org.gbif.common.search.service
+org.gbif.common.search.solr
+org.gbif.common.search.solr.builders
+org.gbif.common.search.util

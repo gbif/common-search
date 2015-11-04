@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Copyright 2011 Global Biodiversity Information Facility (GBIF)<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * you may not use this file except in compliance with the License.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * You may obtain a copy of the License at<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * http://www.apache.org/licenses/LICENSE-2.0<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Unless required by applicable law or agreed to in writing, software<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * See the License for the specific language governing permissions and<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * limitations under the License.<a name="line.11"></a>
+<span class="sourceLineNo">012</span> */<a name="line.12"></a>
+<span class="sourceLineNo">013</span>package org.gbif.common.search.service;<a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.gbif.api.model.common.search.FacetedSearchRequest;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.gbif.api.model.common.search.SearchParameter;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.gbif.api.model.common.search.SearchResponse;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.gbif.api.service.common.SearchService;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.gbif.common.search.builder.FullTextQueryStringBuilder;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.gbif.common.search.builder.SearchResponseBuilder;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.gbif.common.search.builder.SolrQueryBuilder;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.gbif.common.search.exception.SearchException;<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.io.IOException;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.util.LinkedHashMap;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.util.Map;<a name="line.26"></a>
+<span class="sourceLineNo">027</span><a name="line.27"></a>
+<span class="sourceLineNo">028</span>import javax.annotation.Nullable;<a name="line.28"></a>
+<span class="sourceLineNo">029</span><a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.apache.solr.client.solrj.SolrClient;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.apache.solr.client.solrj.SolrQuery;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.apache.solr.client.solrj.SolrServerException;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.apache.solr.client.solrj.response.QueryResponse;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.slf4j.Logger;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.slf4j.LoggerFactory;<a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>/**<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * Generic {@link SearchService} that encapsulates the communication with a {@link SolrClient}.<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * The basic implementation of the service is a search operation that holds all the valid parameters.<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * The response returned is basically information taken from the Solr {@link QueryResponse}.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * During the initialization time the class expects a {@link SolrClient} instance which<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * depending on the configuration parameters is an remote or a embedded Solr server.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * Additionally, this class internally implements the necessary logic for accessing the mapped fields between Solr and<a name="line.44"></a>
+<span class="sourceLineNo">045</span> * the request object values; most of this is implemented by using annotations, enum types and java introspection.<a name="line.45"></a>
+<span class="sourceLineNo">046</span> * All the mapping handling is done by {@link SearchResponseBuilder} and<a name="line.46"></a>
+<span class="sourceLineNo">047</span> * {@link org.gbif.common.search.builder.SolrQueryBuilder}.<a name="line.47"></a>
+<span class="sourceLineNo">048</span> *<a name="line.48"></a>
+<span class="sourceLineNo">049</span> * @param &lt;T&gt; the type of the results that the search operation return using a {@link SearchResponse}&lt;T&gt;<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * @param &lt;P&gt; the search parameter enum also used for facets<a name="line.50"></a>
+<span class="sourceLineNo">051</span> */<a name="line.51"></a>
+<span class="sourceLineNo">052</span>public class SolrSearchService&lt;T, P extends Enum&lt;?&gt; &amp; SearchParameter, ST extends T, R extends FacetedSearchRequest&lt;P&gt;&gt;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    implements SearchService&lt;T, P, R&gt; {<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>  private static final Logger LOG = LoggerFactory.getLogger(SolrSearchService.class);<a name="line.55"></a>
+<span class="sourceLineNo">056</span><a name="line.56"></a>
+<span class="sourceLineNo">057</span>  /*<a name="line.57"></a>
+<span class="sourceLineNo">058</span>   * Solr server instance, this abstract type is used because it can hold instance of:<a name="line.58"></a>
+<span class="sourceLineNo">059</span>   * CommonsHttpSolrServer or EmbeddedSolrServer.<a name="line.59"></a>
+<span class="sourceLineNo">060</span>   */<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  private final SolrClient solrClient;<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>  // Cached instance of response builder.<a name="line.63"></a>
+<span class="sourceLineNo">064</span>  // This instance is used for cloning subsequent usages of this object without the penalty recreate similar instances.<a name="line.64"></a>
+<span class="sourceLineNo">065</span>  private final SearchResponseBuilder&lt;T, ST, P&gt; responseBuilder;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>  private final SolrQueryBuilder&lt;ST, P&gt; searchQueryBuilder;<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>  /**<a name="line.69"></a>
+<span class="sourceLineNo">070</span>   * Default constructor.<a name="line.70"></a>
+<span class="sourceLineNo">071</span>   *<a name="line.71"></a>
+<span class="sourceLineNo">072</span>   * @param solrClient Solr server instance, this abstract type is used because it can hold instance of<a name="line.72"></a>
+<span class="sourceLineNo">073</span>   *        CommonsHttpSolrServer or EmbeddedSolrServer<a name="line.73"></a>
+<span class="sourceLineNo">074</span>   * @param type of the results content<a name="line.74"></a>
+<span class="sourceLineNo">075</span>   * @param solrType Solr response type<a name="line.75"></a>
+<span class="sourceLineNo">076</span>   * @param enumSearchParamType type of the enum search parameter<a name="line.76"></a>
+<span class="sourceLineNo">077</span>   * @param primarySortOrder ordered fields used for an optional sort order in every search<a name="line.77"></a>
+<span class="sourceLineNo">078</span>   */<a name="line.78"></a>
+<span class="sourceLineNo">079</span>  public SolrSearchService(SolrClient solrClient, Class&lt;T&gt; type, Class&lt;ST&gt; solrType,<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    Class&lt;P&gt; enumSearchParamType, Map&lt;String, SolrQuery.ORDER&gt; primarySortOrder) {<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    this.solrClient = solrClient;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    FullTextQueryStringBuilder fullTextQueryBuilder = FullTextQueryStringBuilder.create(solrType);<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    responseBuilder = SearchResponseBuilder.create(type, solrType, enumSearchParamType);<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    responseBuilder.withHighlightFields(fullTextQueryBuilder.getHighlightedFields());<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    searchQueryBuilder = SolrQueryBuilder.create(enumSearchParamType, solrType);<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    searchQueryBuilder.withQueryBuilder(fullTextQueryBuilder);<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    searchQueryBuilder.withPrimarySortOrder(new LinkedHashMap&lt;String, SolrQuery.ORDER&gt;(primarySortOrder));<a name="line.87"></a>
+<span class="sourceLineNo">088</span>  }<a name="line.88"></a>
+<span class="sourceLineNo">089</span><a name="line.89"></a>
+<span class="sourceLineNo">090</span>  public SolrSearchService(SolrClient solrClient, Class&lt;T&gt; type, Class&lt;ST&gt; solrType,<a name="line.90"></a>
+<span class="sourceLineNo">091</span>                           Class&lt;P&gt; enumSearchParamType) {<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    this.solrClient = solrClient;<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    FullTextQueryStringBuilder fullTextQueryBuilder = FullTextQueryStringBuilder.create(solrType);<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    responseBuilder = SearchResponseBuilder.create(type, solrType, enumSearchParamType);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    responseBuilder.withHighlightFields(fullTextQueryBuilder.getHighlightedFields());<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    searchQueryBuilder = SolrQueryBuilder.create(enumSearchParamType, solrType);<a name="line.96"></a>
+<span class="sourceLineNo">097</span>    searchQueryBuilder.withQueryBuilder(fullTextQueryBuilder);<a name="line.97"></a>
+<span class="sourceLineNo">098</span>  }<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>  /**<a name="line.100"></a>
+<span class="sourceLineNo">101</span>   * Full constructor.<a name="line.101"></a>
+<span class="sourceLineNo">102</span>   *<a name="line.102"></a>
+<span class="sourceLineNo">103</span>   * @param solrClient Solr client instance, this abstract type is used because it can hold instance of<a name="line.103"></a>
+<span class="sourceLineNo">104</span>   *        CommonsHttpSolrServer or EmbeddedSolrServer<a name="line.104"></a>
+<span class="sourceLineNo">105</span>   * @param requestHandler specific Solr request handler to be used<a name="line.105"></a>
+<span class="sourceLineNo">106</span>   * @param type of the results content<a name="line.106"></a>
+<span class="sourceLineNo">107</span>   * @param primarySortOrder ordered fields used for an optional sort order in every search<a name="line.107"></a>
+<span class="sourceLineNo">108</span>   */<a name="line.108"></a>
+<span class="sourceLineNo">109</span>  public SolrSearchService(SolrClient solrClient, @Nullable final String requestHandler, Class&lt;T&gt; type,<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    Class&lt;ST&gt; solrType,<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    Class&lt;P&gt; enumSearchParamType, Map&lt;String, SolrQuery.ORDER&gt; primarySortOrder) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    this(solrClient, type, solrType, enumSearchParamType, primarySortOrder);<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    searchQueryBuilder.withRequestHandler(requestHandler);<a name="line.113"></a>
+<span class="sourceLineNo">114</span>  }<a name="line.114"></a>
+<span class="sourceLineNo">115</span><a name="line.115"></a>
+<span class="sourceLineNo">116</span><a name="line.116"></a>
+<span class="sourceLineNo">117</span>  /**<a name="line.117"></a>
+<span class="sourceLineNo">118</span>   * Issues a SolrQuery and converts the response to a SearchResponse object. Besides, the facets and paging<a name="line.118"></a>
+<span class="sourceLineNo">119</span>   * parameter and responses are handled in the request and response objects.<a name="line.119"></a>
+<span class="sourceLineNo">120</span>   *<a name="line.120"></a>
+<span class="sourceLineNo">121</span>   * @param searchRequest the searchRequest that contains the search parameters<a name="line.121"></a>
+<span class="sourceLineNo">122</span>   * @return the SearchResponse of the search operation<a name="line.122"></a>
+<span class="sourceLineNo">123</span>   */<a name="line.123"></a>
+<span class="sourceLineNo">124</span>  @Override<a name="line.124"></a>
+<span class="sourceLineNo">125</span>  public SearchResponse&lt;T, P&gt; search(final R searchRequest) {<a name="line.125"></a>
+<span class="sourceLineNo">126</span><a name="line.126"></a>
+<span class="sourceLineNo">127</span>    try {<a name="line.127"></a>
+<span class="sourceLineNo">128</span>      // Defensive copy: done because the build method is not thread safe.<a name="line.128"></a>
+<span class="sourceLineNo">129</span>      SolrQueryBuilder&lt;ST, P&gt; requestBuilder = searchQueryBuilder.getCopy();<a name="line.129"></a>
+<span class="sourceLineNo">130</span>      SolrQuery solrQuery = requestBuilder.build(searchRequest);<a name="line.130"></a>
+<span class="sourceLineNo">131</span><a name="line.131"></a>
+<span class="sourceLineNo">132</span>      // Executes the search operation in Solr<a name="line.132"></a>
+<span class="sourceLineNo">133</span>      LOG.debug("Solr query executed: {}", solrQuery);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>      final QueryResponse queryResponse = solrClient.query(solrQuery);<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>      // Defensive copy: done because the build method is not thread safe.<a name="line.136"></a>
+<span class="sourceLineNo">137</span>      return responseBuilder.getCopy().build(searchRequest, queryResponse);<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    } catch (SolrServerException e) {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>      if (e.getRootCause() instanceof IllegalArgumentException) {<a name="line.139"></a>
+<span class="sourceLineNo">140</span>        LOG.error("Bad search request", e);<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        throw (IllegalArgumentException) e.getRootCause();<a name="line.141"></a>
+<span class="sourceLineNo">142</span>      } else {<a name="line.142"></a>
+<span class="sourceLineNo">143</span>        LOG.error("Error executing the search operation", e);<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        throw new SearchException(e);<a name="line.144"></a>
+<span class="sourceLineNo">145</span>      }<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    } catch (IOException e) {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>      LOG.error("Error executing the search operation", e);<a name="line.147"></a>
+<span class="sourceLineNo">148</span>      throw new SearchException(e);<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    }<a name="line.149"></a>
+<span class="sourceLineNo">150</span>  }<a name="line.150"></a>
+<span class="sourceLineNo">151</span><a name="line.151"></a>
+<span class="sourceLineNo">152</span>  /**<a name="line.152"></a>
+<span class="sourceLineNo">153</span>   * @return the responseBuilderBase<a name="line.153"></a>
+<span class="sourceLineNo">154</span>   */<a name="line.154"></a>
+<span class="sourceLineNo">155</span>  protected SearchResponseBuilder&lt;T, ST, P&gt; getResponseBuilder() {<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    return responseBuilder;<a name="line.156"></a>
+<span class="sourceLineNo">157</span>  }<a name="line.157"></a>
+<span class="sourceLineNo">158</span><a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>  /**<a name="line.160"></a>
+<span class="sourceLineNo">161</span>   * @return the solrClient<a name="line.161"></a>
+<span class="sourceLineNo">162</span>   */<a name="line.162"></a>
+<span class="sourceLineNo">163</span>  protected SolrClient getSolrClient() {<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    return solrClient;<a name="line.164"></a>
+<span class="sourceLineNo">165</span>  }<a name="line.165"></a>
+<span class="sourceLineNo">166</span>}<a name="line.166"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
