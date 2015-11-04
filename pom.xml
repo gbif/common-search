@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>23</version>
+    <version>25.1</version>
   </parent>
 
   <groupId>org.gbif</groupId>
@@ -24,12 +24,12 @@
   </scm>
 
   <properties>
-    <gbif-common.version>0.18</gbif-common.version>
+    <gbif-api.version>0.30</gbif-api.version>
+    <gbif-common.version>0.20</gbif-common.version>
     <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.3.2</commons-lang3.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
-    <gbif-api.version>0.29</gbif-api.version>
     <guice.version>3.0</guice.version>
     <guava.version>18.0</guava.version>
     <junit.version>4.11</junit.version>
