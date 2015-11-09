@@ -55,7 +55,7 @@ public class SolrModule extends PrivateModule {
       }
     } else if (cfg.serverType == SolrServerType.CLOUD) {
       CloudSolrServerBuilder serverBuilder = new CloudSolrServerBuilder()
-          .withZkHost(cfg.serverHome);
+          .withZkHost(cfg.serverHome).withDefaultCollection(cfg.collection);
       return serverBuilder.build();
     } else { // cfg.serverType == SolrServerType.HTTP)
       LOG.info("Using remote solr server {}", cfg.serverHome);
