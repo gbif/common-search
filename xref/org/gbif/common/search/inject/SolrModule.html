@@ -63,7 +63,7 @@
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>        }
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (cfg.serverType == SolrServerType.CLOUD) {
 <a class="jxr_linenumber" name="L57" href="#L57">57</a>        <a href="../../../../../org/gbif/common/search/solr/builders/CloudSolrServerBuilder.html">CloudSolrServerBuilder</a> serverBuilder = <strong class="jxr_keyword">new</strong> <a href="../../../../../org/gbif/common/search/solr/builders/CloudSolrServerBuilder.html">CloudSolrServerBuilder</a>()
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>            .withZkHost(cfg.serverHome);
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>            .withZkHost(cfg.serverHome).withDefaultCollection(cfg.collection);
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>        <strong class="jxr_keyword">return</strong> serverBuilder.build();
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>      } <strong class="jxr_keyword">else</strong> { <em class="jxr_comment">// cfg.serverType == SolrServerType.HTTP)</em>
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>        LOG.info(<span class="jxr_string">"Using remote solr server {}"</span>, cfg.serverHome);
