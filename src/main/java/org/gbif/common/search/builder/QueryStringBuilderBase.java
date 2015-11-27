@@ -13,23 +13,17 @@
 package org.gbif.common.search.builder;
 
 import org.gbif.api.model.common.search.SearchRequest;
-import org.gbif.common.search.model.FullTextSearchField;
-import org.gbif.common.search.model.WildcardPadding;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
 import static org.gbif.common.search.util.QueryUtils.PARAMS_OR_JOINER;
-import static org.gbif.common.search.util.QueryUtils.getMatchPatternAndScore;
 import static org.gbif.common.search.util.QueryUtils.parseQueryValue;
 import static org.gbif.common.search.util.SolrConstants.BLANK;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_FILTER_QUERY;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_QUERY;
-import static org.gbif.common.search.util.SolrConstants.SCORE_OP;
 
 
 /**

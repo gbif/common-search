@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -100,9 +99,9 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    */
   private SolrQueryBuilder(Class<P> searchParameterEnum, Class<T> annotatedClass) {
     this.searchParameterEnum = searchParameterEnum;
-    this.facetFieldsPropertiesMap = initFacetFieldsPropertiesMap(annotatedClass, searchParameterEnum);
-    this.fieldsPropertiesMap = initFieldsPropertiesMap(annotatedClass);
-    this.facetFieldDefs = initFacetFieldDefs(annotatedClass);
+    facetFieldsPropertiesMap = initFacetFieldsPropertiesMap(annotatedClass, searchParameterEnum);
+    fieldsPropertiesMap = initFieldsPropertiesMap(annotatedClass);
+    facetFieldDefs = initFacetFieldDefs(annotatedClass);
   }
 
   /**

@@ -126,7 +126,7 @@ public class EmbeddedServerBuilder {
       // copy specific configurations, overwriting above defaults
       ResourcesUtil.copy(conf, String.format(SOLR_CONF,coreName), true, SOLR_CONF_DEFAULT_RESOURCES);
       File coreProp = new File(coreDir, "core.properties");
-      if(!coreProp.exists()) {
+      if (!coreProp.exists()) {
         // create empty core.properties in core dir
         coreProp.createNewFile();
       }

@@ -207,7 +207,7 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
    * Cleans all occurrences of highlighted tags/marks in the parameter and returns an new instance clean of those
    * marks.
    */
-  private String cleanHighlightingMarks(final String hlText) {
+  private static String cleanHighlightingMarks(final String hlText) {
     String hlLiteral = hlText;
     int indexPre = hlLiteral.indexOf(HL_PRE);
     while (indexPre > -1) {
@@ -315,7 +315,7 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
    * @param solrResponse to extract the highlighting information
    */
   private void setHighlightedFields(SearchResponse<T, P> response, final QueryResponse solrResponse) {
-    if ((this.hlFieldPropertyPropertiesMap != null) && (solrResponse.getHighlighting() != null) && !solrResponse
+    if ((hlFieldPropertyPropertiesMap != null) && (solrResponse.getHighlighting() != null) && !solrResponse
       .getHighlighting().isEmpty()) {
       for (String docId : solrResponse.getHighlighting().keySet()) {
         setHighlightedFieldValues(response, solrResponse, docId);

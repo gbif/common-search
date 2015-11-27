@@ -74,7 +74,7 @@ public class FullTextQueryStringBuilder extends QueryStringBuilderBase {
   /**
    * Sets the filters for wildcard (if applicable) queries.
    */
-  private void setWildcardFilters(List<String> fullTextQueryComponents, List<String> phraseQueryComponents,
+  private static void setWildcardFilters(List<String> fullTextQueryComponents, List<String> phraseQueryComponents,
                                   FullTextSearchField field, String exactMatchField) {
     if (field.partialMatching() != WildcardPadding.NONE) {
       fullTextQueryComponents
