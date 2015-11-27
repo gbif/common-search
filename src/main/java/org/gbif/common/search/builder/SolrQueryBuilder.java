@@ -239,7 +239,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
   /**
    * Utility method that creates the resulting Solr expression for facet and general query filters parameters.
    */
-  private StringBuilder buildFilterQuery(final boolean isFacetedRequest, final String solrFieldName,
+  private static StringBuilder buildFilterQuery(final boolean isFacetedRequest, final String solrFieldName,
       List<String> filterQueriesComponents) {
     StringBuilder filterQuery = new StringBuilder();
     if (isFacetedRequest) {
@@ -295,7 +295,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    * @param param the parameter to use on a per field basis
    * @return per field facet parameter, e.g. f.dataset_type.facet.sort
    */
-  private String perFieldParamName(String field, String param) {
+  private static String perFieldParamName(String field, String param) {
     return "f." + field + "." + param;
   }
 

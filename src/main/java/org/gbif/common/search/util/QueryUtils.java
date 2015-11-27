@@ -57,7 +57,7 @@ public class QueryUtils {
   private static final String SINGLE_BLANK = "\\ ";
 
   // Pattern for setting the facet method on single field
-  private static final String FACET_METHOD_FMT = "f.%s" + FacetParams.FACET_METHOD;
+  private static final String FACET_METHOD_FMT = "f.%s." + FacetParams.FACET_METHOD;
 
 
   private static final ImmutableMap<FacetField.Method, String> FACET_METHOD_MAP =
