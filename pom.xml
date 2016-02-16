@@ -24,7 +24,7 @@
   </scm>
 
   <properties>
-    <gbif-api.version>0.34</gbif-api.version>
+    <gbif-api.version>0.36</gbif-api.version>
     <gbif-common.version>0.23</gbif-common.version>
     <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
