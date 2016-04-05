@@ -151,6 +151,9 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
     searchResponse.setResults(results);
     searchResponse.setFacets(getFacetsFromResponse(queryResponse));
     setHighlightedFields(searchResponse, queryResponse);
+    if(queryResponse.getSpellCheckResponse() != null){
+      searchResponse.setSpellCheckResponse(SpellCheckResponseBuilder.build(queryResponse.getSpellCheckResponse()));
+    }
     return searchResponse;
   }
 
