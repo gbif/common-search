@@ -2,6 +2,8 @@ package org.gbif.common.search.builder;
 
 import org.gbif.api.model.common.search.SpellCheckResponse;
 
+import java.util.Iterator;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -30,8 +32,20 @@ public class SpellCheckResponseBuilder {
       for (org.apache.solr.client.solrj.response.SpellCheckResponse.Collation collation : solrSpellCheckResponse.getCollatedResults()) {
         SpellCheckResponse.Suggestion suggestion = new SpellCheckResponse.Suggestion();
         suggestion.setNumFound(new Long(collation.getNumberOfHits()).intValue());
-        suggestion.setAlternatives(Lists.newArrayList(collation.getCollationQueryString()));
-        mapBuilder.put(COLLATIONS_JOINER.join(collation.getMisspellingsAndCorrections()), suggestion);
+        StringBuilder token = new StringBuilder();
+        StringBuilder spellCorrection = new StringBuilder();
+        for (Iterator<org.apache.solr.client.solrj.response.SpellCheckResponse.Correction>  itCorrections = collation.getMisspellingsAndCorrections().iterator();
+            itCorrections.hasNext();) {
+          org.apache.solr.client.solrj.response.SpellCheckResponse.Correction correction = itCorrections.next();
+          token.append(correction.getOriginal());
+          spellCorrection.append(correction.getCorrection());
+          if (itCorrections.hasNext()) {
+            token.append(' ');
+            spellCorrection.append(' ');
+          }
+        }
+        suggestion.setAlternatives(Lists.newArrayList(spellCorrection.toString()));
+        mapBuilder.put(token.toString(), suggestion);
       }
     } else if (solrSpellCheckResponse.getSuggestionMap() != null && !solrSpellCheckResponse.getSuggestionMap().isEmpty()) {
       for (org.apache.solr.client.solrj.response.SpellCheckResponse.Suggestion solrSuggestion : solrSpellCheckResponse.getSuggestionMap()
