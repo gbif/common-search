@@ -2,8 +2,6 @@ package org.gbif.common.search.builder;
 
 import org.gbif.api.model.common.search.SpellCheckResponse;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -39,31 +37,10 @@ public class SpellCheckResponseBuilder {
   private static Map<String,SpellCheckResponse.Suggestion> fromCollatedResults(org.apache.solr.client.solrj.response.SpellCheckResponse solrSpellCheckResponse) {
     Map<String, SpellCheckResponse.Suggestion> suggestionMap = Maps.newHashMap();
     for (org.apache.solr.client.solrj.response.SpellCheckResponse.Collation collation : solrSpellCheckResponse.getCollatedResults()) {
-      StringBuilder tokenBuilder = new StringBuilder(collation.getMisspellingsAndCorrections().size());
-      StringBuilder spellCorrection = new StringBuilder(collation.getMisspellingsAndCorrections().size());
-      for (Iterator<org.apache.solr.client.solrj.response.SpellCheckResponse.Correction> itCorrections =
-        collation.getMisspellingsAndCorrections().iterator(); itCorrections.hasNext();) {
-        org.apache.solr.client.solrj.response.SpellCheckResponse.Correction correction = itCorrections.next();
-        tokenBuilder.append(correction.getOriginal());
-        spellCorrection.append(correction.getCorrection());
-        if (itCorrections.hasNext()) {
-          tokenBuilder.append(' ');
-          spellCorrection.append(' ');
-        }
-      }
-      String token = tokenBuilder.toString();
-      if (suggestionMap.containsKey(token)) {
-        SpellCheckResponse.Suggestion suggestion = suggestionMap.get(token);
-        List<String> alternatives = suggestion.getAlternatives();
-        alternatives.add(spellCorrection.toString());
-        suggestion.setAlternatives(alternatives);
-        suggestion.setNumFound(Math.max(suggestion.getNumFound(), Long.valueOf(collation.getNumberOfHits()).intValue()));
-      } else {
-        SpellCheckResponse.Suggestion suggestion = new SpellCheckResponse.Suggestion();
-        suggestion.setAlternatives(Lists.newArrayList(spellCorrection.toString()));
-        suggestion.setNumFound(Long.valueOf(collation.getNumberOfHits()).intValue());
-        suggestionMap.put(token.toString(), suggestion);
-      }
+      SpellCheckResponse.Suggestion suggestion = new SpellCheckResponse.Suggestion();
+      suggestion.setAlternatives(Lists.newArrayList(collation.getCollationQueryString()));
+      suggestion.setNumFound(Long.valueOf(collation.getNumberOfHits()).intValue());
+      suggestionMap.put(collation.getCollationQueryString(),suggestion);
     }
     return suggestionMap;
   }
