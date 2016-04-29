@@ -269,7 +269,7 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
           for (final FacetField.Count count : facetField.getValues()) {
             String value = count.getName();
             if (Enum.class.isAssignableFrom(facetParam.type())) {
-              value = getFacetEnumValue(facetParam, value);
+              value = SolrQueryUtils.getFacetEnumValue(facetParam, value);
             }
             counts.add(new Facet.Count(value, count.getCount()));
           }
@@ -281,35 +281,6 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
     return facets;
   }
 
-
-  /**
-   * Gets the facet value of Enum type parameter.
-   * If the Enum is either a Country or a Language, its iso2Letter code it's used.
-   */
-  private String getFacetEnumValue(P facetParam, String value) {
-    // the expected enum type for the value if it is an enum - otherwise null
-    final Enum<?>[] enumValues = ((Class<? extends Enum<?>>) facetParam.type()).getEnumConstants();
-    // if we find integers these are ordinals, translate back to enum names
-    final Integer intValue = Ints.tryParse(value);
-    if (intValue != null) {
-      final Enum<?> enumValue = enumValues[intValue];
-      if (Country.class.equals(facetParam.type())) {
-        return ((Country) enumValue).getIso2LetterCode();
-      } else if (Language.class.equals(facetParam.type())) {
-        return ((Language) enumValue).getIso2LetterCode();
-      } else {
-        return enumValue.name();
-      }
-    } else {
-      if (Country.class.equals(facetParam.type())) {
-        return Country.fromIsoCode(value).getIso2LetterCode();
-      } else if (Language.class.equals(facetParam.type())) {
-        return Language.fromIsoCode(value).getIso2LetterCode();
-      } else {
-        return VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) facetParam.type()).name();
-      }
-    }
-  }
 
   /**
    * Takes the highlighted fields form solrResponse and copies them to the response object.

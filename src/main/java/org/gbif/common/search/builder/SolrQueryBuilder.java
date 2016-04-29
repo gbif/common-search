@@ -15,13 +15,10 @@ package org.gbif.common.search.builder;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.common.search.model.FacetField;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.BiMap;
@@ -35,23 +32,27 @@ import static org.gbif.common.search.util.AnnotationUtils.initFacetFieldDefs;
 import static org.gbif.common.search.util.AnnotationUtils.initFacetFieldsPropertiesMap;
 import static org.gbif.common.search.util.AnnotationUtils.initFieldsPropertiesMap;
 import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
-import static org.gbif.common.search.util.QueryUtils.PARAMS_OR_JOINER;
 import static org.gbif.common.search.util.QueryUtils.isNegated;
 import static org.gbif.common.search.util.QueryUtils.removeNegation;
 import static org.gbif.common.search.util.QueryUtils.setFacetMethod;
 import static org.gbif.common.search.util.QueryUtils.setQueryPaging;
 import static org.gbif.common.search.util.QueryUtils.setRequestHandler;
 import static org.gbif.common.search.util.SolrConstants.ALT_QUERY_PARAM;
-import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.DEFAULT_QUERY;
 import static org.gbif.common.search.util.SolrConstants.FACET_FILTER_EX;
-import static org.gbif.common.search.util.SolrConstants.FACET_FILTER_TAG;
 import static org.gbif.common.search.util.SolrConstants.HL_FRAGMENT_SIZE;
 import static org.gbif.common.search.util.SolrConstants.NOT_OP;
 import static org.gbif.common.search.util.SolrConstants.NUM_HL_SNIPPETS;
 import static org.gbif.common.search.util.SolrConstants.PARAM_FACET_MISSING;
 import static org.gbif.common.search.util.SolrConstants.PARAM_FACET_SORT;
 import static org.gbif.common.search.util.SolrConstants.TAG_FIELD_PARAM;
+
+import static org.gbif.common.search.builder.SolrQueryUtils.DEFAULT_FACET_COUNT;
+import static org.gbif.common.search.builder.SolrQueryUtils.DEFAULT_FACET_MISSING;
+import static org.gbif.common.search.builder.SolrQueryUtils.DEFAULT_FACET_SORT;
+import static org.gbif.common.search.builder.SolrQueryUtils.perFieldParamName;
+import static org.gbif.common.search.builder.SolrQueryUtils.getInterpretedValue;
+import static org.gbif.common.search.builder.SolrQueryUtils.buildFilterQuery;
 
 
 /**
@@ -65,9 +66,6 @@ import static org.gbif.common.search.util.SolrConstants.TAG_FIELD_PARAM;
 public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SolrQueryBuilder.class);
-  private static final FacetField.SortOrder DEFAULT_FACET_SORT = FacetField.SortOrder.COUNT;
-  private static final int DEFAULT_FACET_COUNT = 1;
-  private static final boolean DEFAULT_FACET_MISSING = true;
   private QueryStringBuilderBase queryBuilder;
 
   // Request request handler
@@ -233,69 +231,6 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
         setFacetMethod(solrQuery, field, fieldDef.method());
       }
     }
-  }
-
-  /**
-   * Utility method that creates the resulting Solr expression for facet and general query filters parameters.
-   */
-  private static StringBuilder buildFilterQuery(final boolean isFacetedRequest, final String solrFieldName,
-      List<String> filterQueriesComponents) {
-    StringBuilder filterQuery = new StringBuilder();
-    if (isFacetedRequest) {
-      filterQuery.append(FACET_FILTER_TAG.replace(TAG_FIELD_PARAM, solrFieldName));
-    }
-    if (filterQueriesComponents.size() > 1) {
-      filterQuery.append('(');
-      filterQuery.append(PARAMS_OR_JOINER.join(filterQueriesComponents));
-      filterQuery.append(')');
-    } else {
-      filterQuery.append(PARAMS_OR_JOINER.join(filterQueriesComponents));
-    }
-    return filterQuery;
-  }
-
-  /**
-   * Interprets the value of parameter "value" using types pType (Parameter type) and eType (Enumeration).
-   */
-  private static String getInterpretedValue(final Class<?> pType, final String value) {
-    // By default use a phrase query is surrounded by "
-    String interpretedValue = APOSTROPHE + value + APOSTROPHE;
-    if (Enum.class.isAssignableFrom(pType)) {
-      // treat country codes special, they use iso codes
-      Enum<?> e;
-      if (Country.class.isAssignableFrom(pType)) {
-        e = Country.fromIsoCode(value);
-      } else {
-        e = VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) pType);
-      }
-      if (value == null) {
-        throw new IllegalArgumentException("Value Null is invalid for filter parameter " + pType.getName());
-      }
-      interpretedValue = String.valueOf(e.ordinal());
-
-    } else if (UUID.class.isAssignableFrom(pType)) {
-      interpretedValue = UUID.fromString(value).toString();
-
-    } else if (Double.class.isAssignableFrom(pType)) {
-      interpretedValue = String.valueOf(Double.parseDouble(value));
-
-    } else if (Integer.class.isAssignableFrom(pType)) {
-      interpretedValue = String.valueOf(Integer.parseInt(value));
-
-    } else if (Boolean.class.isAssignableFrom(pType)) {
-      interpretedValue = String.valueOf(Boolean.parseBoolean(value));
-    }
-
-    return interpretedValue;
-  }
-
-  /**
-   * @param field the solr field
-   * @param param the parameter to use on a per field basis
-   * @return per field facet parameter, e.g. f.dataset_type.facet.sort
-   */
-  private static String perFieldParamName(String field, String param) {
-    return "f." + field + "." + param;
   }
 
   /**
