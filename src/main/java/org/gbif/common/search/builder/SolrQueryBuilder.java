@@ -12,6 +12,7 @@
  */
 package org.gbif.common.search.builder;
 
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
@@ -25,6 +26,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.params.FacetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,6 +210,14 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
       solrQuery.setFacetMissing(DEFAULT_FACET_MISSING);
       solrQuery.setFacetSort(DEFAULT_FACET_SORT.toString().toLowerCase());
 
+      if(searchRequest.getFacetLimit() != null) {
+        solrQuery.setFacetLimit(searchRequest.getFacetLimit());
+      }
+
+      if(searchRequest.getFacetOffset() != null) {
+        solrQuery.setParam(FacetParams.FACET_OFFSET,searchRequest.getFacetOffset().toString());
+      }
+
       for (final P facet : searchRequest.getFacets()) {
         if (!facetFieldsMapInv.containsKey(facet)) {
           LOG.warn("{} is no valid facet. Ignore", facet);
@@ -229,6 +239,11 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
           solrQuery.setParam(perFieldParamName(field, PARAM_FACET_SORT), fieldDef.sort().toString().toLowerCase());
         }
         setFacetMethod(solrQuery, field, fieldDef.method());
+        Pageable facetPage = searchRequest.getFacetPage(facet);
+        if (facetPage != null) {
+          solrQuery.setParam(perFieldParamName(field, FacetParams.FACET_OFFSET), Long.toString(facetPage.getOffset()));
+          solrQuery.setParam(perFieldParamName(field, FacetParams.FACET_LIMIT), Integer.toString(facetPage.getLimit()));
+        }
       }
     }
   }

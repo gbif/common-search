@@ -1,5 +1,6 @@
 package org.gbif.common.search.builder;
 
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
@@ -23,6 +24,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.primitives.Ints;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.FacetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,6 @@ import static org.gbif.common.search.util.QueryUtils.setFacetMethod;
 import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.FACET_FILTER_EX;
 import static org.gbif.common.search.util.SolrConstants.FACET_FILTER_TAG;
-import static org.gbif.common.search.util.SolrConstants.NOT_OP;
 import static org.gbif.common.search.util.SolrConstants.PARAM_FACET_MISSING;
 import static org.gbif.common.search.util.SolrConstants.PARAM_FACET_SORT;
 import static org.gbif.common.search.util.SolrConstants.TAG_FIELD_PARAM;
@@ -67,6 +68,14 @@ public class SolrQueryUtils {
       solrQuery.setFacetMissing(DEFAULT_FACET_MISSING);
       solrQuery.setFacetSort(DEFAULT_FACET_SORT.toString().toLowerCase());
 
+      if(searchRequest.getFacetLimit() != null) {
+        solrQuery.setFacetLimit(searchRequest.getFacetLimit());
+      }
+
+      if(searchRequest.getFacetOffset() != null) {
+        solrQuery.setParam(FacetParams.FACET_OFFSET, searchRequest.getFacetOffset().toString());
+      }
+
       for (final P facet : searchRequest.getFacets()) {
         if (!configurations.containsKey(facet)) {
           LOG.warn("{} is no valid facet. Ignore", facet);
@@ -88,6 +97,11 @@ public class SolrQueryUtils {
           solrQuery.setParam(perFieldParamName(field, PARAM_FACET_SORT), facetFieldConfiguration.getSortOrder().toString().toLowerCase());
         }
         setFacetMethod(solrQuery, field, facetFieldConfiguration.getMethod());
+        Pageable facetPage = searchRequest.getFacetPage(facet);
+        if (facetPage != null) {
+          solrQuery.setParam(perFieldParamName(field, FacetParams.FACET_OFFSET), Long.toString(facetPage.getOffset()));
+          solrQuery.setParam(perFieldParamName(field, FacetParams.FACET_LIMIT), Integer.toString(facetPage.getLimit()));
+        }
       }
     }
   }

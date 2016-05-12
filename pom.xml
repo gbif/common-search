@@ -22,7 +22,7 @@
     <developerConnection>scm:git:git@github.com:gbif/common-search.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-  
+
   <distributionManagement>
     <site>
       <id>gh-pages</id>
@@ -31,7 +31,7 @@
   </distributionManagement>
 
   <properties>
-    <gbif-api.version>0.38</gbif-api.version>
+    <gbif-api.version>0.39-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.26</gbif-common.version>
     <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
