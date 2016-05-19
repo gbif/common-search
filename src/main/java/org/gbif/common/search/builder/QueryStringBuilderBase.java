@@ -14,6 +14,8 @@ package org.gbif.common.search.builder;
 
 import org.gbif.api.model.common.search.SearchRequest;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -32,10 +34,13 @@ import static org.gbif.common.search.util.SolrConstants.DEFAULT_QUERY;
  */
 public abstract class QueryStringBuilderBase {
 
+
   protected static final Logger LOG = LoggerFactory.getLogger(QueryStringBuilderBase.class);
 
   // Solr parameter place holder
   protected static final String QUERY_PLACE_HOLDER = "$q";
+
+  private static final Pattern QUERY_PLACE_HOLDER_PTRN = Pattern.compile(QUERY_PLACE_HOLDER,Pattern.LITERAL);
 
   // query template patterns to build queries by replacing the above placeholder
   protected String queryTemplate = QUERY_PLACE_HOLDER;
@@ -62,7 +67,8 @@ public abstract class QueryStringBuilderBase {
    */
   public String build(String q) {
     String parsedQ = parseQueryValue(q);
-    String generatedQuery = getSearchPattern(parsedQ).replace(QUERY_PLACE_HOLDER, parsedQ);
+    String generatedQuery = QUERY_PLACE_HOLDER_PTRN.matcher(getSearchPattern(parsedQ))
+                            .replaceAll(Matcher.quoteReplacement(parsedQ));
     LOG.debug("Solr query generated for fulltext search: {}", generatedQuery);
     return generatedQuery;
   }

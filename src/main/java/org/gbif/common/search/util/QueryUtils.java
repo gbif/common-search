@@ -154,7 +154,7 @@ public class QueryUtils {
 
 
   /**
-   * Determines if the value is negated with the {@link SearchConstants#NOT_OP} operator.
+   * Determines if the value is negated with the NOT operator.
    */
   public static boolean isNegated(String value) {
     return value.startsWith(NOT_OP);
@@ -207,7 +207,7 @@ public class QueryUtils {
   }
 
   /**
-   * If the value parameter starts with {@link SearchConstants#NOT_OP} it is removed.
+   * If the value parameter starts with NOT it is removed.
    */
   public static String removeNegation(String value) {
     if (value.startsWith(NOT_OP)) {

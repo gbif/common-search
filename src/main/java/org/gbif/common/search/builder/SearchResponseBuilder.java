@@ -258,9 +258,10 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
    * @return the List of facets retrieved from the Solr response
    */
   private List<Facet<P>> getFacetsFromResponse(final QueryResponse queryResponse) {
-    List<Facet<P>> facets = Lists.newArrayList();
     if (queryResponse.getFacetFields() != null) {
-      for (final FacetField facetField : queryResponse.getFacetFields()) {
+      List<FacetField> facetFields =  queryResponse.getFacetFields();
+      List<Facet<P>> facets = Lists.newArrayListWithCapacity(facetFields.size());
+      for (final FacetField facetField : facetFields) {
         P facetParam = solrField2ParamEnumMap.get(facetField.getName());
         Facet<P> facet = new Facet<P>(facetParam);
 
@@ -278,7 +279,7 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
         facets.add(facet);
       }
     }
-    return facets;
+    return Lists.newArrayList();
   }
 
 

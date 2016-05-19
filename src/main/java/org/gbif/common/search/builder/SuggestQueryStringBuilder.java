@@ -18,7 +18,10 @@ import org.gbif.common.search.util.SolrConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import org.apache.solr.client.solrj.util.ClientUtils;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars;
 
 import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
 import static org.gbif.common.search.util.QueryUtils.PARAMS_OR_JOINER;
@@ -38,6 +41,8 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
   private static final Integer PARTIAL_QUERY_BOOST = 300;
 
   private static final Integer PARTIAL_BOOST_DECREMENT = 100;
+
+  private static final Pattern QUERY_PLACE_HOLDER_PTRN = Pattern.compile(QUERY_PLACE_HOLDER, Pattern.LITERAL);
 
   private String startPhraseQueryTemplate;
 
@@ -59,8 +64,7 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
    */
   @Override
   public String build(String q) {
-    final String qValue = QueryUtils.emptyToDefaultQuery(q);
-    return buildStringQuery(qValue);
+    return buildStringQuery(QueryUtils.emptyToDefaultQuery(q));
   }
 
   /**
@@ -95,16 +99,16 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
   private String buildStringQuery(String q) {
     String cleanQ = clearConsecutiveBlanks(q);
     String[] tokens = cleanQ.split("\\ ");
-    Collection<String> query = new ArrayList<String>();
-    Collection<String> partialQuery = new ArrayList<String>();
-    Integer partialBoost = PARTIAL_QUERY_BOOST;
+    Collection<String> partialQuery = new ArrayList<String>(tokens.length + 1);
+    Collection<String> query = new ArrayList<String>(4);
     if (tokens.length > 1) {
+      Integer partialBoost = PARTIAL_QUERY_BOOST;
       String[] phraseQuery = new String[2];
-      phraseQuery[0] = phraseQueryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(cleanQ));
-      phraseQuery[1] = startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(tokens[0]));
+      phraseQuery[0] = replaceQueryPlaceHolder(phraseQueryTemplate, escapeQueryChars(cleanQ));
+      phraseQuery[1] = replaceQueryPlaceHolder(startPhraseQueryTemplate, escapeQueryChars(tokens[0]));
       query.add(toParenthesesQuery(PARAMS_OR_JOINER.join(phraseQuery)));
       for (String token : tokens) {
-        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(token)),
+        partialQuery.add(toBoostedQuery(replaceQueryPlaceHolder(queryTemplate, escapeQueryChars(token)),
             partialBoost, false));
         if (partialBoost > PARTIAL_BOOST_DECREMENT) {
           partialBoost -= PARTIAL_BOOST_DECREMENT;
@@ -112,16 +116,22 @@ public class SuggestQueryStringBuilder extends QueryStringBuilderBase {
       }
     } else {
       if (SolrConstants.DEFAULT_FILTER_QUERY.equals(cleanQ)) {
-        query.add(toParenthesesQuery(startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, cleanQ)));
-        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, tokens[0]), partialBoost, false));
+        query.add(toParenthesesQuery(replaceQueryPlaceHolder(startPhraseQueryTemplate, cleanQ)));
+        partialQuery.add(toBoostedQuery(replaceQueryPlaceHolder(queryTemplate, tokens[0]), PARTIAL_QUERY_BOOST, false));
       } else {
-        query.add(toParenthesesQuery(startPhraseQueryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(cleanQ))));
-        partialQuery.add(toBoostedQuery(queryTemplate.replace(QUERY_PLACE_HOLDER, ClientUtils.escapeQueryChars(tokens[0])), partialBoost, false));
+        query.add(toParenthesesQuery(replaceQueryPlaceHolder(startPhraseQueryTemplate, escapeQueryChars(cleanQ))));
+        partialQuery.add(toBoostedQuery(replaceQueryPlaceHolder(queryTemplate, escapeQueryChars(tokens[0])),
+                                        PARTIAL_QUERY_BOOST, false));
       }
-
-
     }
     query.add(toParenthesesQuery(PARAMS_OR_JOINER.join(partialQuery)));
     return PARAMS_OR_JOINER.join(query);
+  }
+
+  /**
+   * Utility method that intends to reuse the compiled pattern for the query place holder.
+   */
+  private static String replaceQueryPlaceHolder(String matcher, String replacement) {
+    return  QUERY_PLACE_HOLDER_PTRN.matcher(matcher).replaceAll(Matcher.quoteReplacement(replacement));
   }
 }

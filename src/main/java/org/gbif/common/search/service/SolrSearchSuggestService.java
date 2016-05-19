@@ -65,9 +65,9 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
-  public SolrSearchSuggestService(SolrClient solrClient, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    Class<SSUGT> suggestAnnotatedClass) {
+  public SolrSearchSuggestService(SolrClient solrClient, Class<T> searchType, Class<ST> searchSolrType,
+                                  Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
+                                  Class<SSUGT> suggestAnnotatedClass) {
     super(solrClient, searchType, searchSolrType, searchParameterType, primarySortOrder);
     this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
@@ -80,15 +80,15 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
    * Constructor for regular search/suggest operations.
    * Doesn't contain the default order for suggest results.
    *
-   * @param solrServer Solr server instance, this abstract type is used because it can hold instance of
+   * @param solrClient Solr client instance, this abstract type is used because it can hold instance of
    *        CommonsHttpSolrServer or EmbeddedSolrServer
    * @param requestHandler specific Solr request handler to be used
    * @param searchType of the results content
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
   public SolrSearchSuggestService(SolrClient solrClient, @Nullable final String requestHandler, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    Class<SSUGT> suggestAnnotatedClass) {
+                                  Class<ST> searchSolrType, Class<P> searchParameterType,
+                                  Map<String, SolrQuery.ORDER> primarySortOrder, Class<SSUGT> suggestAnnotatedClass) {
     super(solrClient, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
     this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
@@ -108,8 +108,9 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
    * @param suggestSortOrder ordered fields used for an optional sort order in every suggest operation
    */
   public SolrSearchSuggestService(SolrClient solrClient, @Nullable final String requestHandler, Class<T> searchType,
-    Class<ST> searchSolrType, Class<P> searchParameterType, Map<String, SolrQuery.ORDER> primarySortOrder,
-    Map<String, SolrQuery.ORDER> suggestSortOrder, Class<SSUGT> suggestAnnotatedClass) {
+                                  Class<ST> searchSolrType, Class<P> searchParameterType,
+                                  Map<String, SolrQuery.ORDER> primarySortOrder,
+                                  Map<String, SolrQuery.ORDER> suggestSortOrder, Class<SSUGT> suggestAnnotatedClass) {
     super(solrClient, requestHandler, searchType, searchSolrType, searchParameterType, primarySortOrder);
     this.suggestAnnotatedClass = suggestAnnotatedClass;
     suggestQueryBuilder =
@@ -122,7 +123,7 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
   public List<SUGT> suggest(RSUG suggestRequest) {
     if (suggestRequest.getLimit() < 1) {
       LOG.debug("Suggest request with limit {} found. Reset to default {}", suggestRequest.getLimit(),
-        DEFAULT_SUGGEST_LIMIT);
+                DEFAULT_SUGGEST_LIMIT);
       suggestRequest.setLimit(DEFAULT_SUGGEST_LIMIT);
     }
     if (suggestRequest.getOffset() > 0) {
@@ -130,11 +131,9 @@ public class SolrSearchSuggestService<T, P extends Enum<?> & SearchParameter, ST
     }
 
     try {
-      SolrQuery solrQuery = suggestQueryBuilder.build(suggestRequest);
-      QueryResponse queryResponse = getSolrClient().query(solrQuery);
+      QueryResponse queryResponse = getSolrClient().query(suggestQueryBuilder.build(suggestRequest));
       return (List<SUGT>) SearchResponseBuilder.buildSuggestReponse(suggestRequest, queryResponse,
-        suggestAnnotatedClass)
-        .getResults();
+                                                                    suggestAnnotatedClass).getResults();
 
     } catch (SolrServerException | IOException e) {
       LOG.error("Error executing/building the request", e);

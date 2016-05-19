@@ -77,7 +77,7 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
   public SolrSearchService(SolrClient solrClient, Class<T> type, Class<ST> solrType,
-    Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+                           Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
     this.solrClient = solrClient;
     FullTextQueryStringBuilder fullTextQueryBuilder = FullTextQueryStringBuilder.create(solrType);
     responseBuilder = SearchResponseBuilder.create(type, solrType, enumSearchParamType);
@@ -107,8 +107,8 @@ public class SolrSearchService<T, P extends Enum<?> & SearchParameter, ST extend
    * @param primarySortOrder ordered fields used for an optional sort order in every search
    */
   public SolrSearchService(SolrClient solrClient, @Nullable final String requestHandler, Class<T> type,
-    Class<ST> solrType,
-    Class<P> enumSearchParamType, Map<String, SolrQuery.ORDER> primarySortOrder) {
+                           Class<ST> solrType, Class<P> enumSearchParamType,
+                           Map<String,SolrQuery.ORDER> primarySortOrder) {
     this(solrClient, type, solrType, enumSearchParamType, primarySortOrder);
     searchQueryBuilder.withRequestHandler(requestHandler);
   }

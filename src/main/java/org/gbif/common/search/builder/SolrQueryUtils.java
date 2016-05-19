@@ -57,7 +57,9 @@ public class SolrQueryUtils {
    * @param searchRequest the searchRequest used to extract the parameters
    * @param solrQuery this object is modified by adding the facets parameters
    */
-  public static <P extends SearchParameter> void applyFacetSettings(FacetedSearchRequest<P> searchRequest, SolrQuery solrQuery, Map<P,FacetFieldConfiguration> configurations) {
+  public static <P extends SearchParameter> void applyFacetSettings(FacetedSearchRequest<P> searchRequest,
+                                                                    SolrQuery solrQuery,
+                                                                    Map<P,FacetFieldConfiguration> configurations) {
 
 
     if (!searchRequest.getFacets().isEmpty()) {
@@ -68,7 +70,7 @@ public class SolrQueryUtils {
       solrQuery.setFacetMissing(DEFAULT_FACET_MISSING);
       solrQuery.setFacetSort(DEFAULT_FACET_SORT.toString().toLowerCase());
 
-      if(searchRequest.getFacetLimit() != null) {
+      if (searchRequest.getFacetLimit() != null) {
         solrQuery.setFacetLimit(searchRequest.getFacetLimit());
       }
 
@@ -86,7 +88,7 @@ public class SolrQueryUtils {
         if (searchRequest.isMultiSelectFacets()) {
           // use exclusion filter with same name as used in filter query
           // http://wiki.apache.org/solr/SimpleFacetParameters#Tagging_and_excluding_Filters
-          solrQuery.addFacetField(FACET_FILTER_EX.replace(TAG_FIELD_PARAM, field));
+          solrQuery.addFacetField(taggedField(field,FACET_FILTER_EX));
         } else {
           solrQuery.addFacetField(field);
         }
@@ -111,9 +113,10 @@ public class SolrQueryUtils {
    */
   public static StringBuilder buildFilterQuery(final boolean isFacetedRequest, final String solrFieldName,
                                                 List<String> filterQueriesComponents) {
-    StringBuilder filterQuery = new StringBuilder();
+    //Setting initial max capacity
+    StringBuilder filterQuery = new StringBuilder(filterQueriesComponents.size() + 4);
     if (isFacetedRequest) {
-      filterQuery.append(FACET_FILTER_TAG.replace(TAG_FIELD_PARAM, solrFieldName));
+      filterQuery.append(taggedField(solrFieldName));
     }
     if (filterQueriesComponents.size() > 1) {
       filterQuery.append('(');
@@ -170,8 +173,12 @@ public class SolrQueryUtils {
     return "f." + field + "." + param;
   }
 
-  public static String taggedField(String solrFieldName){
-    return  TAG_FIELD_PARAM_PATTERN.matcher(FACET_FILTER_TAG).replaceAll(Matcher.quoteReplacement(solrFieldName));
+  public static String taggedField(String fieldName){
+    return  taggedField(fieldName,FACET_FILTER_TAG);
+  }
+
+  public static String taggedField(String solrFieldName, String matcher){
+    return  TAG_FIELD_PARAM_PATTERN.matcher(matcher).replaceAll(Matcher.quoteReplacement(solrFieldName));
   }
 
   /**
@@ -215,7 +222,7 @@ public class SolrQueryUtils {
     final Enum<?>[] enumValues = ((Class<? extends Enum<?>>) facetParam.type()).getEnumConstants();
     // if we find integers these are ordinals, translate back to enum names
     final Integer intValue = Ints.tryParse(value);
-    if (intValue != null) {
+    if (null != intValue) {
       final Enum<?> enumValue = enumValues[intValue];
       if (Country.class.equals(facetParam.type())) {
         return ((Country) enumValue).getIso2LetterCode();

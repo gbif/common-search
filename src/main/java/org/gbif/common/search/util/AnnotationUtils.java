@@ -12,6 +12,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -81,13 +82,14 @@ public class AnnotationUtils {
    * @return a map with SolrFieldName <-> FieldFacet definition.
    */
   public static Map<String, FacetField> initFacetFieldDefs(Class<?> annotatedClass) {
-    Map<String, FacetField> fieldDefs = Maps.newHashMap();
     if (annotatedClass.isAnnotationPresent(SearchMapping.class)) {
-      for (FacetField f : annotatedClass.getAnnotation(SearchMapping.class).facets()) {
+      FacetField[] facetFields = annotatedClass.getAnnotation(SearchMapping.class).facets();
+      Map<String, FacetField> fieldDefs = Maps.newHashMapWithExpectedSize(facetFields.length);
+      for (FacetField f : facetFields) {
         fieldDefs.put(f.field(), f);
       }
     }
-    return fieldDefs;
+    return Maps.newHashMap();
   }
 
 
@@ -133,9 +135,8 @@ public class AnnotationUtils {
         Field annotation = m.getAnnotation(Field.class);
         String solrFieldName = annotation.value();
         // remove set and lowercase first char
-        String propertyName =
-            new StringBuilder().append(Character.toLowerCase(m.getName().substring(3).charAt(0)))
-            .append(m.getName().substring(4)).toString();
+        String propertyName = Character.toLowerCase(m.getName().substring(3).charAt(0)) +
+                              m.getName().substring(4);
         fieldsPropertiesMap.put(solrFieldName, propertyName);
       }
     }

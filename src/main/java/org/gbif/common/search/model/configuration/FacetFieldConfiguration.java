@@ -24,13 +24,8 @@ public class FacetFieldConfiguration {
   /**
    * Full constructor.
    */
-  public FacetFieldConfiguration(
-    String field,
-    SearchParameter searchParameter,
-    FacetField.Method method,
-    FacetField.SortOrder sortOrder,
-    boolean missing
-  ) {
+  public FacetFieldConfiguration(String field, SearchParameter searchParameter, FacetField.Method method,
+                                 FacetField.SortOrder sortOrder, boolean missing) {
     this.field = field;
     this.searchParameter = searchParameter;
     this.method = method;

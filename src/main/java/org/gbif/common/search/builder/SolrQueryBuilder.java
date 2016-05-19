@@ -18,6 +18,7 @@ import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
 import org.gbif.common.search.model.FacetField;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import org.apache.solr.common.params.FacetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.common.search.builder.SolrQueryUtils.taggedField;
 import static org.gbif.common.search.util.AnnotationUtils.initFacetFieldDefs;
 import static org.gbif.common.search.util.AnnotationUtils.initFacetFieldsPropertiesMap;
 import static org.gbif.common.search.util.AnnotationUtils.initFieldsPropertiesMap;
@@ -67,7 +69,9 @@ import static org.gbif.common.search.builder.SolrQueryUtils.buildFilterQuery;
  */
 public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
 
+
   private static final Logger LOG = LoggerFactory.getLogger(SolrQueryBuilder.class);
+
   private QueryStringBuilderBase queryBuilder;
 
   // Request request handler
@@ -200,7 +204,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    */
   private void applyFacetSettings(FacetedSearchRequest<P> searchRequest, SolrQuery solrQuery) {
 
-    final BiMap<P, String> facetFieldsMapInv = facetFieldsPropertiesMap.inverse();
+    BiMap<P, String> facetFieldsMapInv = facetFieldsPropertiesMap.inverse();
 
     if (!searchRequest.getFacets().isEmpty()) {
       // Only show facets that contains at least 1 record
@@ -227,7 +231,7 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
         if (searchRequest.isMultiSelectFacets()) {
           // use exclusion filter with same name as used in filter query
           // http://wiki.apache.org/solr/SimpleFacetParameters#Tagging_and_excluding_Filters
-          solrQuery.addFacetField(FACET_FILTER_EX.replace(TAG_FIELD_PARAM, field));
+          solrQuery.addFacetField(taggedField(field,FACET_FILTER_EX));
         } else {
           solrQuery.addFacetField(field);
         }
@@ -288,8 +292,8 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
    * @return the String containing a Solr filter query
    */
   private void setQueryFilter(final SearchRequest<P> searchRequest, SolrQuery solrQuery) {
-    final Multimap<P, String> params = searchRequest.getParameters();
-    final boolean isFacetedRequest = FacetedSearchRequest.class.isAssignableFrom(searchRequest.getClass());
+    Multimap<P, String> params = searchRequest.getParameters();
+    boolean isFacetedRequest = FacetedSearchRequest.class.isAssignableFrom(searchRequest.getClass());
     if (params != null) {
       BiMap<P, String> fieldsPropertiesMapInv = facetFieldsPropertiesMap.inverse();
       for (P param : params.keySet()) {
@@ -299,9 +303,9 @@ public class SolrQueryBuilder<T, P extends Enum<?> & SearchParameter> {
         }
         // solr field for this parameter
         String solrFieldName = fieldsPropertiesMapInv.get(param);
-
-        List<String> filterQueriesComponents = Lists.newArrayList();
-        for (String paramValue : params.get(param)) {
+        Collection<String> paramValues = params.get(param);
+        List<String> filterQueriesComponents = Lists.newArrayListWithCapacity(paramValues.size());
+        for (String paramValue : paramValues) {
           // Negate expression is removed if it is present
           String interpretedValue = getInterpretedValue(param.type(), removeNegation(paramValue));
           String queryComponent = PARAMS_JOINER.join(solrFieldName, interpretedValue);
