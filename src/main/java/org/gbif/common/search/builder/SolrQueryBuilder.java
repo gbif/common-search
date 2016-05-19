@@ -49,7 +49,6 @@ import static org.gbif.common.search.util.SolrConstants.NOT_OP;
 import static org.gbif.common.search.util.SolrConstants.NUM_HL_SNIPPETS;
 import static org.gbif.common.search.util.SolrConstants.PARAM_FACET_MISSING;
 import static org.gbif.common.search.util.SolrConstants.PARAM_FACET_SORT;
-import static org.gbif.common.search.util.SolrConstants.TAG_FIELD_PARAM;
 
 import static org.gbif.common.search.builder.SolrQueryUtils.DEFAULT_FACET_COUNT;
 import static org.gbif.common.search.builder.SolrQueryUtils.DEFAULT_FACET_MISSING;
