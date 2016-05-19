@@ -278,6 +278,7 @@ public class SearchResponseBuilder<T, ST extends T, P extends Enum<?> & SearchPa
         facet.setCounts(counts);
         facets.add(facet);
       }
+      return facets;
     }
     return Lists.newArrayList();
   }

@@ -12,7 +12,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -88,6 +87,7 @@ public class AnnotationUtils {
       for (FacetField f : facetFields) {
         fieldDefs.put(f.field(), f);
       }
+      return fieldDefs;
     }
     return Maps.newHashMap();
   }
