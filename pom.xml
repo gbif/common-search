@@ -38,6 +38,7 @@
     <commons-lang3.version>3.3.2</commons-lang3.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <guice.version>4.0</guice.version>
+    <!-- see shading below -->
     <guava.version>18.0</guava.version>
     <junit.version>4.12</junit.version>
     <mockito.version>1.9.5</mockito.version>
@@ -56,6 +57,33 @@
 
   <build>
     <plugins>
+      <!-- shade Guava into g18.com.google.common to avoid issue with the version used by HBase/Hadoop -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>com.google.guava:guava</include>
+                </includes>
+              </artifactSet>
+              <relocations>
+                <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>g18.com.google.common</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- run integration tests (*IT) during verify -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
