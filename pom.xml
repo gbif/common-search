@@ -57,7 +57,9 @@
 
   <build>
     <plugins>
-      <!-- shade Guava into g18.com.google.common to avoid issue with the version used by HBase/Hadoop -->
+      <!-- shade Guava into g18.com.google.common to avoid issue with the version (14) used by HBase/Hadoop. -->
+      <!-- We only shade specific class(es) that are not available in Guava 14. Shading everything causes -->
+      <!-- issues with return type, see QueryUtils.PARAMS_JOINER -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -74,10 +76,18 @@
                   <include>com.google.guava:guava</include>
                 </includes>
               </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>com.google.guava:guava</artifact>
+                  <includes>
+                    <include>com/google/common/base/MoreObjects.class</include>
+                  </includes>
+                </filter>
+              </filters>
               <relocations>
                 <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>g18.com.google.common</shadedPattern>
+                  <pattern>com.google.common.base.MoreObjects</pattern>
+                  <shadedPattern>g18.com.google.common.base.MoreObjects</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

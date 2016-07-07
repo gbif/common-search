@@ -4,7 +4,6 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.common.search.SearchRequest;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
@@ -20,7 +19,6 @@ import java.util.regex.Pattern;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.primitives.Ints;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -28,10 +26,7 @@ import org.apache.solr.common.params.FacetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.common.search.util.QueryUtils.PARAMS_JOINER;
 import static org.gbif.common.search.util.QueryUtils.PARAMS_OR_JOINER;
-import static org.gbif.common.search.util.QueryUtils.isNegated;
-import static org.gbif.common.search.util.QueryUtils.removeNegation;
 import static org.gbif.common.search.util.QueryUtils.setFacetMethod;
 import static org.gbif.common.search.util.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.util.SolrConstants.FACET_FILTER_EX;
@@ -60,7 +55,6 @@ public class SolrQueryUtils {
   public static <P extends SearchParameter> void applyFacetSettings(FacetedSearchRequest<P> searchRequest,
                                                                     SolrQuery solrQuery,
                                                                     Map<P,FacetFieldConfiguration> configurations) {
-
 
     if (!searchRequest.getFacets().isEmpty()) {
       // Only show facets that contains at least 1 record

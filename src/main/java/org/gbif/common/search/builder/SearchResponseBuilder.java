@@ -17,9 +17,6 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchResponse;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Language;
 import org.gbif.common.search.exception.SearchException;
 import org.gbif.common.search.model.HighlightableList;
 
@@ -31,7 +28,6 @@ import java.util.regex.Matcher;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
-import com.google.common.primitives.Ints;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.solr.client.solrj.response.FacetField;

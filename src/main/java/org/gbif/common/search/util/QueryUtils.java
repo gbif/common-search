@@ -40,6 +40,8 @@ import static org.gbif.common.search.util.SolrConstants.TERMS_COMP_PATH;
 public class QueryUtils {
 
   // Solr parameters joiners
+  // TODO: maybe we should return a non-guava class or expose a method instead of the variable
+  // that prevents the shading of Guava
   public static final Joiner PARAMS_JOINER = Joiner.on(PARAM_VALUE_SEP).skipNulls();
   public static final Joiner PARAMS_OR_JOINER = Joiner.on(PARAM_OR_OP).skipNulls();
   public static final Joiner PARAMS_AND_JOINER = Joiner.on(PARAM_AND_OP).skipNulls();
