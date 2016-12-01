@@ -1,4 +1,4 @@
-package org.gbif.common.search.util;
+package org.gbif.common.search.solr;
 
 import org.junit.Assert;
 import org.junit.Test;

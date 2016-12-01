@@ -1,4 +1,4 @@
-package org.gbif.common.search.inject;
+package org.gbif.common.search.solr;
 
 import java.io.IOException;
 
@@ -27,7 +27,7 @@ public class SolrModuleTest {
   @Test
   public void testModuleWithoutConfigs() throws IOException, SolrServerException {
     // no properties bound, expect embedded /tmp server as default
-    Injector injector = Guice.createInjector(new TestModule(), new SolrModule());
+    Injector injector = Guice.createInjector(new TestModule(), new SolrModule(new SolrConfig()));
     // a real embedded solr
     SolrClient solr = injector.getInstance(SolrClient.class);
     // do sth with the server to make sure its real and not just lazy
