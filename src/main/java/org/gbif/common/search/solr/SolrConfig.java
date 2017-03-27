@@ -22,6 +22,7 @@ public class SolrConfig {
   private static final Logger LOG = LoggerFactory.getLogger(SolrConfig.class);
   private static final String P_TYPE = "type";
   private static final String P_HOME= "home";
+  private static final String ID_FIELD= "idField";
   private static final String P_COLLECTION = "collection";
   private static final String P_DELETE = "delete";
 
@@ -33,6 +34,11 @@ public class SolrConfig {
 
   public boolean deleteOnExit = false;
 
+  /**
+   * IdField is required by SolrCloudClient
+   */
+  public String idField;
+
 
   public Properties toProperties(@Nullable String prefix) {
     Properties props = new Properties();
@@ -40,6 +46,7 @@ public class SolrConfig {
     setProp(props, prefix, P_HOME, serverHome);
     setProp(props, prefix, P_COLLECTION, collection);
     setProp(props, prefix, P_DELETE, deleteOnExit);
+    setProp(props, prefix, ID_FIELD, idField);
     return props;
   }
 
@@ -72,6 +79,7 @@ public class SolrConfig {
     cfg.serverType = SolrServerType.valueOf(props.getProperty(P_TYPE, cfg.serverType.name()));
     cfg.serverHome = props.getProperty(P_HOME, cfg.serverHome);
     cfg.collection = props.getProperty(P_COLLECTION, cfg.collection);
+    cfg.idField = props.getProperty(ID_FIELD, cfg.idField);
     cfg.deleteOnExit = Boolean.valueOf(props.getProperty(P_DELETE, String.valueOf(cfg.deleteOnExit)));
     return cfg;
   }
@@ -100,10 +108,11 @@ public class SolrConfig {
         }
 
       case CLOUD:
-        LOG.info("Using cloud solr server {} with collection {}", serverHome, collection);
+        LOG.info("Using cloud solr server {} with collection {} and idField {}", serverHome, collection, idField);
         return new CloudSolrServerBuilder()
             .withZkHost(serverHome)
             .withDefaultCollection(collection)
+            .withIdField(idField)
             .build();
 
       default:

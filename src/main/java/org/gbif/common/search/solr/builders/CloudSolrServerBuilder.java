@@ -18,6 +18,9 @@ public class CloudSolrServerBuilder {
   // Default collection name
   private String defaultCollection;
 
+  // Solr Id field, used to route documents in shards
+  private String idField;
+
   /**
    * Builds a {@link LBHttpSolrClient} instance with a default collection name and pointing to a Zookeeper server.
    */
@@ -27,6 +30,9 @@ public class CloudSolrServerBuilder {
     // Creates the load-balanced SolrServer.
     CloudSolrClient cloudSolrClient = new CloudSolrClient(zkHost);
     cloudSolrClient.setDefaultCollection(defaultCollection);
+    if (idField != null) {
+      cloudSolrClient.setIdField(idField);
+    }
     return cloudSolrClient;
   }
 
@@ -43,6 +49,14 @@ public class CloudSolrServerBuilder {
    */
   public CloudSolrServerBuilder withZkHost(String zkHost) {
     this.zkHost = zkHost;
+    return this;
+  }
+
+  /**
+   * Zookeeper sever url.
+   */
+  public CloudSolrServerBuilder withIdField(String idField) {
+    this.idField = idField;
     return this;
   }
 
