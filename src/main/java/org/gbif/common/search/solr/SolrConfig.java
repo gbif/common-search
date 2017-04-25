@@ -116,4 +116,24 @@ public class SolrConfig {
         throw new IllegalArgumentException("Unknown server type " + serverType);
     }
   }
+
+  public SolrServerType getServerType() {
+    return serverType;
+  }
+
+  public String getServerHome() {
+    return serverHome;
+  }
+
+  public String getCollection() {
+    return collection;
+  }
+
+  public boolean isDeleteOnExit() {
+    return deleteOnExit;
+  }
+
+  public String getIdField() {
+    return idField;
+  }
 }
