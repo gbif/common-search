@@ -117,6 +117,26 @@ public class SolrConfig {
     }
   }
 
+  public void setServerType(SolrServerType serverType) {
+    this.serverType = serverType;
+  }
+
+  public void setServerHome(String serverHome) {
+    this.serverHome = serverHome;
+  }
+
+  public void setCollection(String collection) {
+    this.collection = collection;
+  }
+
+  public void setDeleteOnExit(boolean deleteOnExit) {
+    this.deleteOnExit = deleteOnExit;
+  }
+
+  public void setIdField(String idField) {
+    this.idField = idField;
+  }
+
   public SolrServerType getServerType() {
     return serverType;
   }
