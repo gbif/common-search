@@ -1,4 +1,4 @@
-#common-search
+# common-search
 This library contains common classes used by the GBIF search services backed by Solr. In particular the classes exposed
 byt this library can be categorized into the following types:
   
