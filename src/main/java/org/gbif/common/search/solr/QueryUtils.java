@@ -1,22 +1,37 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.common.search.solr;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.util.IsoDateParsingUtils;
 import org.gbif.api.util.SearchTypeValidator;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
+import lombok.experimental.UtilityClass;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.TermsParams;
 import org.apache.solr.parser.QueryParser;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 
 import static org.gbif.common.search.solr.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.solr.SolrConstants.BLANK;
@@ -36,6 +51,7 @@ import static org.gbif.common.search.solr.SolrConstants.TERMS_COMP_PATH;
 /**
  * Utility class for common query methods.
  */
+@UtilityClass
 public class QueryUtils {
 
   // Solr parameters joiners
@@ -58,13 +74,6 @@ public class QueryUtils {
 
   // Pattern for setting the facet method on single field
   private static final String FACET_METHOD_FMT = "f.%s." + FacetParams.FACET_METHOD;
-
-  /**
-   * Default private/hidden constructor.
-   */
-  private QueryUtils() {
-    // empty block
-  }
 
   /**
    * Builds SolrQuery suitable to the TermsComponent.
@@ -276,8 +285,8 @@ public class QueryUtils {
   /**
    * Transforms a Date instance into a String using the default date parser.
    */
-  public static String toDateQueryFormat(Date value) {
-    return new SimpleDateFormat(ISO8601_FMT).format(value);
+  public static String toDateQueryFormat(LocalDate value) {
+    return IsoDateParsingUtils.ISO_DATE_FORMATTER.format(value);
   }
 
 

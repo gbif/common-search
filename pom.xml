@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>37</version>
+    <version>56</version>
   </parent>
 
   <groupId>org.gbif</groupId>
@@ -31,12 +31,12 @@
   </distributionManagement>
 
   <properties>
-    <gbif-api.version>0.85</gbif-api.version>
-    <gbif-common.version>0.47</gbif-common.version>
+    <gbif-api.version>0.160-SNAPSHOT</gbif-api.version>
+    <gbif-common.version>0.52</gbif-common.version>
     <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.4</commons-lang3.version>
-    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
+    <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
     <guice.version>4.0</guice.version>
     <!-- see shading below -->
     <guava.version>18.0</guava.version>
@@ -46,6 +46,9 @@
     <solr.version>5.4.1</solr.version>
     <httpclient.version>4.3.6</httpclient.version>
     <servlet-api.version>2.5</servlet-api.version>
+
+    <!-- Tools-->
+    <lombok.version>1.18.20</lombok.version>
   </properties>
 
   <repositories>
@@ -63,7 +66,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>${maven-shade-plugin.version}</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -103,6 +105,12 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
