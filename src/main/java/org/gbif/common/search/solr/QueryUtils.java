@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import lombok.experimental.UtilityClass;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
@@ -32,6 +31,8 @@ import org.apache.solr.parser.QueryParser;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+
+import lombok.experimental.UtilityClass;
 
 import static org.gbif.common.search.solr.SolrConstants.APOSTROPHE;
 import static org.gbif.common.search.solr.SolrConstants.BLANK;
