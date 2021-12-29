@@ -42,9 +42,9 @@ public class SolrConfig {
   private static final String P_COLLECTION = "collection";
   private static final String P_DELETE = "delete";
 
-  private SolrServerType serverType = SolrServerType.EMBEDDED;
-  private String serverHome = null;
-  private String collection = "collection1";
+  private SolrServerType serverType;
+  private String serverHome;
+  private String collection;
   private boolean deleteOnExit = false;
 
   /**
