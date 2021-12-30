@@ -41,7 +41,11 @@ public class SolrModuleTest {
   @Test
   public void testModuleWithoutConfigs() throws IOException, SolrServerException {
     // no properties bound, expect embedded /tmp server as default
-    Injector injector = Guice.createInjector(new TestModule(), new SolrModule(new SolrConfig()));
+    SolrConfig solrConfig = new SolrConfig();
+    solrConfig.setCollection("collection1");
+    solrConfig.setDeleteOnExit(true);
+    solrConfig.setServerType(SolrServerType.EMBEDDED);
+    Injector injector = Guice.createInjector(new TestModule(), new SolrModule(solrConfig));
     // a real embedded solr
     SolrClient solr = injector.getInstance(SolrClient.class);
     // do sth with the server to make sure its real and not just lazy

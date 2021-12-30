@@ -136,7 +136,6 @@ public class EmbeddedServerBuilder {
       ResourcesUtil.copy(solrHome, "solr/", false, "solr.xml");
       // copy default configurations
       File conf = new File(coreDir, "conf");
-      ResourcesUtil.copy(conf, "solr/default/", false, SOLR_DEFAULT_RESOURCES);
       // copy specific configurations, overwriting above defaults
       ResourcesUtil.copy(conf, String.format(SOLR_CONF,coreName), true, SOLR_CONF_DEFAULT_RESOURCES);
       File coreProp = new File(coreDir, "core.properties");
