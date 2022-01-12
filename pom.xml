@@ -31,8 +31,8 @@
   </distributionManagement>
 
   <properties>
-    <gbif-api.version>0.160-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.52</gbif-common.version>
+    <gbif-api.version>0.162</gbif-api.version>
+    <gbif-common.version>0.53</gbif-common.version>
     <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.4</commons-lang3.version>
