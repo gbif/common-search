@@ -33,7 +33,7 @@
   <properties>
     <gbif-api.version>0.162</gbif-api.version>
     <gbif-common.version>0.53</gbif-common.version>
-    <commons-beanutils.version>1.9.2</commons-beanutils.version>
+    <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
