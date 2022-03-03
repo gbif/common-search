@@ -11,19 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.common.search.solr;
+package org.gbif.common.search;
 
+import org.elasticsearch.search.SearchHit;
 
-/**
- * Supported SolrServer types.
- */
-public enum SolrServerType {
-  // Embedded instance
-  EMBEDDED,
-  // HTTP Solr server (default)
-  HTTP,
-  // LoadBalanced Http Server
-  LBHTTP,
-  // CloudSolr server
-  CLOUD;
+public interface SearchResultConverter<T> {
+
+  T toSearchResult(SearchHit searchHit);
 }
