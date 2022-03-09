@@ -14,6 +14,7 @@
 package org.gbif.common.search;
 
 import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.util.VocabularyUtils;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -36,6 +37,34 @@ public interface EsFieldMapper<P extends SearchParameter> {
    * @return the search parameter associated to the field
    */
   P get(String esFieldName);
+
+  /**
+   * Parses an indexed value into a value expected in the response.
+   * @param value to parse
+   * @param parameter search parameter
+   * @return parsed value
+   */
+  default String parseIndexedValue(String value, P parameter) {
+    return value;
+  }
+
+  /**
+   * Parses the value of a search parameter to the expected value in the search index.
+   * @param value to parse
+   * @param parameter search parameter
+   * @return parsed value
+   */
+  default String parseParamValue(String value, P parameter) {
+    if (Enum.class.isAssignableFrom(parameter.type())) {
+      return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
+        .map(Enum::name)
+        .orElse(null);
+    }
+    if (Boolean.class.isAssignableFrom(parameter.type())) {
+      return value.toLowerCase();
+    }
+    return value;
+  }
 
   /**
    * Looks-up for the estimate cardinality of ElasticSearch field.

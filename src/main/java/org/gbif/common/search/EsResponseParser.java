@@ -113,7 +113,7 @@ public class EsResponseParser<T, P extends SearchParameter> {
                               buckets.stream()
                                   .skip(facetOffset)
                                   .limit(facetOffset + facetLimit)
-                                  .map(b -> new Facet.Count(b.getKeyAsString(), b.getDocCount()))
+                                  .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(b.getKeyAsString(), facet), b.getDocCount()))
                                   .collect(Collectors.toList());
 
                           return new Facet<>(facet, counts);

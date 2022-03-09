@@ -17,8 +17,6 @@ import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchConstants;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -458,29 +456,6 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return limit;
   }
 
-  /**
-   * Mapping parameter values into know values for Enums. Non-enum parameter values are passed using
-   * its raw value. Country can be enum value or iso code.
-   */
-  private String parseParamValue(String value, P parameter) {
-    if (Enum.class.isAssignableFrom(parameter.type())) {
-      if (!Country.class.isAssignableFrom(parameter.type())) {
-        return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
-            .map(Enum::name)
-            .orElse(null);
-      } else {
-        return VocabularyUtils.lookup(value, Country.class)
-            .map(Country::getIso2LetterCode)
-            .orElse(value);
-      }
-    }
-
-    if (Boolean.class.isAssignableFrom(parameter.type())) {
-      return value.toLowerCase();
-    }
-    return value;
-  }
-
   private List<QueryBuilder> buildTermQuery(Collection<String> values, P param, String esField) {
     List<QueryBuilder> queries = new ArrayList<>();
 
@@ -492,7 +467,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
         continue;
       }
 
-      parsedValues.add(parseParamValue(value, param));
+      parsedValues.add(esFieldMapper.parseParamValue(value, param));
     }
 
     if (parsedValues.size() == 1) {
