@@ -16,9 +16,13 @@ package org.gbif.common.search;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.util.VocabularyUtils;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.sort.SortBuilder;
+import java.util.Collections;
+import java.util.List;
+
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 
 public interface EsFieldMapper<P extends SearchParameter> {
 
@@ -83,17 +87,17 @@ public interface EsFieldMapper<P extends SearchParameter> {
   boolean isDateField(String esFieldName);
 
   /** @return a list of fields to be excluded in the _source field. */
-  String[] excludeFields();
+  List<String> excludeFields();
 
   /** @return the default sorting of results */
-  SortBuilder<? extends SortBuilder>[] sorts();
+  List<SortOptions> sorts();
 
   /**
    * Fields to be included in a suggest response. By default only the requested parameter field is
    * returned.
    */
-  default String[] includeSuggestFields(P searchParameter) {
-    return new String[] {get(searchParameter)};
+  default List<String> includeSuggestFields(P searchParameter) {
+    return Collections.singletonList(get(searchParameter));
   }
 
   /**
@@ -105,8 +109,8 @@ public interface EsFieldMapper<P extends SearchParameter> {
   }
 
   /** Fields used during to highlight in results. */
-  default String[] highlightingFields() {
-    return new String[] {};
+  default List<String> highlightingFields() {
+    return Collections.emptyList();
   }
 
   /**
@@ -115,13 +119,17 @@ public interface EsFieldMapper<P extends SearchParameter> {
    *
    * @return
    */
-  default String[] getMappedFields() {
-    return new String[0];
+  default List<String> getMappedFields() {
+    return Collections.emptyList();
   }
 
 
   /** Builds a full text search query builder. */
-  default QueryBuilder fullTextQuery(String q) {
-    return QueryBuilders.matchQuery("all", q);
+  default Query fullTextQuery(String q) {
+    return Query.of(b -> b.match(QueryBuilders.match().field("all").query(q).build()));
+  }
+
+  default boolean isSpatialParameter(P parameter) {
+    return false;
   }
 }

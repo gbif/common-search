@@ -13,7 +13,9 @@
  */
 package org.gbif.common.search.es.indexing;
 
-import org.elasticsearch.client.RestHighLevelClient;
+import org.gbif.common.search.es.EsClient;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -34,7 +36,7 @@ public class EsConfiguration {
 
   @Bean
   @Primary
-  public RestHighLevelClient restHighLevelClient(
+  public ElasticsearchClient restHighLevelClient(
       @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
     return EsClient.provideEsClient(esClientConfiguration);
   }
@@ -47,7 +49,7 @@ public class EsConfiguration {
   }
 
   @Bean(name = "occurrenceEsClient")
-  public RestHighLevelClient occurrenceRestHighLevelClient(
+  public ElasticsearchClient occurrenceRestHighLevelClient(
       @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
     return EsClient.provideEsClient(esClientConfiguration);
   }

@@ -23,25 +23,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.bucket.filter.Filter;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.Buckets;
+import co.elastic.clients.elasticsearch._types.aggregations.MultiBucketBase;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 
 import static org.gbif.common.search.es.indexing.EsQueryUtils.extractFacetLimit;
 import static org.gbif.common.search.es.indexing.EsQueryUtils.extractFacetOffset;
 
-public class EsResponseParser<T, P extends SearchParameter> {
+public class EsResponseParser<T,SR, P extends SearchParameter> {
 
   private final EsFieldMapper<P> fieldParameterMapper;
 
-  private final SearchResultConverter<T> searchResultConverter;
+  private final Function<Hit<SR>,T> searchResultConverter;
 
   /** Private constructor. */
   public EsResponseParser(
-      SearchResultConverter<T> searchResultConverter, EsFieldMapper<P> fieldParameterMapper) {
+    Function<Hit<SR>,T> searchResultConverter, EsFieldMapper<P> fieldParameterMapper) {
     this.searchResultConverter = searchResultConverter;
     this.fieldParameterMapper = fieldParameterMapper;
   }
@@ -52,8 +51,8 @@ public class EsResponseParser<T, P extends SearchParameter> {
    * @return a new instance of a SearchResponse.
    */
   public SearchResponse<T, P> buildSearchResponse(
-      org.elasticsearch.action.search.SearchResponse esResponse, SearchRequest<P> request) {
-    return buildSearchResponse(esResponse, request, searchResultConverter::toSearchResult);
+    co.elastic.clients.elasticsearch.core.SearchResponse<SR> esResponse, SearchRequest<P> request) {
+    return buildSearchResponse(esResponse, request, searchResultConverter);
   }
 
   /**
@@ -61,76 +60,66 @@ public class EsResponseParser<T, P extends SearchParameter> {
    *
    * @return a new instance of a SearchResponse.
    */
-  public <R> SearchResponse<R, P> buildSearchResponse(
-      org.elasticsearch.action.search.SearchResponse esResponse,
+  public SearchResponse<T, P> buildSearchResponse(
+    co.elastic.clients.elasticsearch.core.SearchResponse<SR> esResponse,
       SearchRequest<P> request,
-      Function<SearchHit, R> mapper) {
+      Function<Hit<SR>, T> mapper) {
 
-    SearchResponse<R, P> response = new SearchResponse<>(request);
-    response.setCount(esResponse.getHits().getTotalHits().value);
-    parseHits(esResponse, mapper).ifPresent(response::setResults);
+    SearchResponse<T,P> response = new SearchResponse<>(request);
+    Optional.ofNullable(esResponse.hits().total()).ifPresent(t -> response.setCount(t.value()));
+    response.setResults(parseHits(esResponse, mapper));
     if (request instanceof FacetedSearchRequest) {
-      parseFacets(esResponse, (FacetedSearchRequest<P>) request).ifPresent(response::setFacets);
+      response.setFacets(parseFacets(esResponse, (FacetedSearchRequest<P>) request));
     }
 
     return response;
   }
 
 
-  /** Extract the buckets of an {@link Aggregation}. */
-  private List<? extends Terms.Bucket> getBuckets(Aggregation aggregation) {
-    if (aggregation instanceof Terms) {
-      return ((Terms) aggregation).getBuckets();
-    } else if (aggregation instanceof Filter) {
-      return ((Filter) aggregation)
-          .getAggregations().asList().stream()
-              .flatMap(agg -> ((Terms) agg).getBuckets().stream())
-              .collect(Collectors.toList());
+  /** Extract the buckets of an {@link Aggregate}. */
+  private Buckets<? extends MultiBucketBase> getBuckets(Aggregate aggregate) {
+    if (aggregate.isSterms()) {
+      return aggregate.sterms().buckets();
+    } else if (aggregate.isFilters()) {
+      return aggregate.filters().buckets();
     } else {
-      throw new IllegalArgumentException(aggregation.getClass() + " aggregation not supported");
+      throw new IllegalArgumentException(aggregate.getClass() + " aggregation not supported");
     }
   }
 
-  private Optional<List<Facet<P>>> parseFacets(
-      org.elasticsearch.action.search.SearchResponse esResponse, FacetedSearchRequest<P> request) {
-    return Optional.ofNullable(esResponse.getAggregations())
-        .map(
-            aggregations ->
-                aggregations.asList().stream()
-                    .map(
-                        aggs -> {
-                          // get buckets
-                          List<? extends Terms.Bucket> buckets = getBuckets(aggs);
+  private List<Facet<P>> parseFacets(
+    co.elastic.clients.elasticsearch.core.SearchResponse<SR> esResponse, FacetedSearchRequest<P> request) {
+    return esResponse.aggregations()
+          .entrySet()
+          .stream()
+          .map(
+              agg ->
+              {
+                            // get buckets
+                            Buckets<? extends MultiBucketBase> buckets = getBuckets(agg.getValue());
 
-                          // get facet of the agg
-                          P facet = fieldParameterMapper.get(aggs.getName());
+                            // get facet of the agg
+                            P facet = fieldParameterMapper.get(agg.getKey());
 
-                          // check for paging in facets
-                          long facetOffset = extractFacetOffset(request, facet);
-                          long facetLimit = extractFacetLimit(request, facet);
+                            // check for paging in facets
+                            long facetOffset = extractFacetOffset(request, facet);
+                            long facetLimit = extractFacetLimit(request, facet);
 
-                          List<Facet.Count> counts =
-                              buckets.stream()
-                                  .skip(facetOffset)
-                                  .limit(facetOffset + facetLimit)
-                                  .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(b.getKeyAsString(), facet), b.getDocCount()))
-                                  .collect(Collectors.toList());
+                            List<Facet.Count> counts =
+                                buckets.array().stream()
+                                    .skip(facetOffset)
+                                    .limit(facetOffset + facetLimit)
+                                    .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(b.toString(), facet), b.docCount()))
+                                    .collect(Collectors.toList());
 
-                          return new Facet<>(facet, counts);
-                        })
-                    .collect(Collectors.toList()));
+                            return new Facet<>(facet, counts);
+                          })
+                      .collect(Collectors.toList());
   }
 
-  private <R> Optional<List<R>> parseHits(
-      org.elasticsearch.action.search.SearchResponse esResponse, Function<SearchHit, R> mapper) {
-    if (esResponse.getHits() == null
-        || esResponse.getHits().getHits() == null
-        || esResponse.getHits().getHits().length == 0) {
-      return Optional.empty();
-    }
-
-    return Optional.of(
-        Stream.of(esResponse.getHits().getHits()).map(mapper).collect(Collectors.toList()));
+  private List<T> parseHits(
+    co.elastic.clients.elasticsearch.core.SearchResponse<SR> esResponse, Function<Hit<SR>, T> mapper) {
+    return esResponse.hits().hits().stream().map(mapper).collect(Collectors.toList());
   }
 
 }

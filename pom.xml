@@ -48,16 +48,16 @@
     <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
 
     <!-- Elasticsearch -->
-    <elasticsearch.version>7.9.1</elasticsearch.version>
-    <lucene.version>8.6.2</lucene.version>
+    <elasticsearch.version>8.1.0</elasticsearch.version>
+    <jakarta.json-api.version>2.0.1</jakarta.json-api.version>
     <jts.version>1.16.1</jts.version>
 
     <!-- Logging -->
     <slf4j-api.version>1.7.13</slf4j-api.version>
 
     <!-- Testing -->
-    <junit.version>4.12</junit.version>
-    <mockito.version>1.9.5</mockito.version>
+    <junit.version>5.6.3</junit.version>
+    <mockito.version>3.3.3</mockito.version>
   </properties>
 
   <repositories>
@@ -167,8 +167,8 @@
 
     <!-- ES -->
     <dependency>
-      <groupId>org.elasticsearch.client</groupId>
-      <artifactId>elasticsearch-rest-high-level-client</artifactId>
+      <groupId>co.elastic.clients</groupId>
+      <artifactId>elasticsearch-java</artifactId>
       <version>${elasticsearch.version}</version>
     </dependency>
     <dependency>
@@ -177,29 +177,19 @@
       <version>${elasticsearch.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch-core</artifactId>
-      <version>${elasticsearch.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
-      <version>${elasticsearch.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-client-sniffer</artifactId>
       <version>${elasticsearch.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>${lucene.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.locationtech.jts</groupId>
       <artifactId>jts-core</artifactId>
       <version>${jts.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.json</groupId>
+      <artifactId>jakarta.json-api</artifactId>
+      <version>${jakarta.json-api.version}</version>
     </dependency>
 
     <!-- Logging -->
@@ -211,8 +201,8 @@
 
     <!-- Testing -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
