@@ -27,16 +27,12 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
-import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
-import co.elastic.clients.elasticsearch.indices.GetAliasRequest;
-import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
+import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.elasticsearch.indices.update_aliases.AddAction;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import jakarta.json.stream.JsonParser;
 import lombok.SneakyThrows;
@@ -74,23 +70,37 @@ public class EsClient implements Closeable {
    */
   public void swapAlias(String alias, String indexName) {
     try {
-      GetAliasResponse getAliasesResponse =
-        elasticsearchClient.indices().getAlias(new GetAliasRequest.Builder().name(alias).build());
-      Set<String> idxsToDelete = getAliasesResponse.result().keySet();
-      elasticsearchClient.indices()
-        .updateAliases(new UpdateAliasesRequest.Builder()
-                         .actions(new Action.Builder().add(new AddAction.Builder()
-                                                                 .alias(alias)
-                                                                 .index(indexName)
-                                                                 .build())
-                                    .build())
-                         .build());
-      if (!idxsToDelete.isEmpty()) {
+      BooleanResponse aliasExist =
         elasticsearchClient
+          .indices()
+          .existsAlias(new ExistsAliasRequest.Builder().name(alias).build());
+
+      if (!aliasExist.value()) {
+        elasticsearchClient
+          .indices()
+          .putAlias(new PutAliasRequest.Builder().index(indexName).name(alias).build());
+      } else {
+        GetAliasResponse getAliasesResponse =
+          elasticsearchClient
             .indices()
-            .delete(new DeleteIndexRequest.Builder()
-                          .index(new ArrayList<>(idxsToDelete))
-                          .build());
+            .getAlias(new GetAliasRequest.Builder().name(alias).allowNoIndices(true).build());
+        Set<String> idxsToDelete = getAliasesResponse.result().keySet();
+
+        elasticsearchClient
+          .indices()
+          .updateAliases(
+            new UpdateAliasesRequest.Builder()
+              .actions(
+                new Action.Builder()
+                  .add(new AddAction.Builder().alias(alias).index(indexName).build())
+                  .build())
+              .build());
+        if (!idxsToDelete.isEmpty()) {
+          elasticsearchClient
+            .indices()
+            .delete(
+              new DeleteIndexRequest.Builder().index(new ArrayList<>(idxsToDelete)).build());
+        }
       }
     } catch (IOException ex) {
       throw new RuntimeException(ex);
