@@ -13,10 +13,12 @@
  */
 package org.gbif.common;
 
-import org.gbif.api.model.common.search.SearchRequest;
+import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.common.search.EsSearchRequestBuilder;
 import org.gbif.common.search.test.DataFieldMapper;
 import org.gbif.common.search.test.DataSearchParameter;
+
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +34,10 @@ public class EsSearchRequestBuilderTest {
 
   @Test
   public void testBuild() {
-    SearchRequest<DataSearchParameter> searchRequest = new SearchRequest<>();
+    FacetedSearchRequest<DataSearchParameter> searchRequest = new FacetedSearchRequest<>();
     searchRequest.addParameter(DataSearchParameter.TITLE, "Animals");
+    searchRequest.setFacets(Collections.singleton(DataSearchParameter.COUNTRY));
+
     co.elastic.clients.elasticsearch.core.SearchRequest
       esSearchRequest = requestBuilder.buildSearchRequest(searchRequest, "data");
 

@@ -13,7 +13,7 @@
  */
 package org.gbif.common;
 
-import org.gbif.api.model.common.search.SearchRequest;
+import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.search.EsResponseParser;
 import org.gbif.common.search.test.Data;
@@ -58,7 +58,8 @@ public class EsResponseParserTest {
       .build();
 
     //Mock request
-    SearchRequest<DataSearchParameter> request = new SearchRequest<>();
+    FacetedSearchRequest<DataSearchParameter> request = new FacetedSearchRequest<>();
+    request.setFacets(Collections.singleton(DataSearchParameter.COUNTRY));
 
     //Tests
     org.gbif.api.model.common.search.SearchResponse<Data, DataSearchParameter> response = responseParser.buildSearchResponse(searchResponse, request);

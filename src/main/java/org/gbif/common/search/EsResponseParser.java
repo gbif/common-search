@@ -26,7 +26,10 @@ import java.util.stream.Collectors;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Buckets;
+import co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsBucket;
+import co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket;
 import co.elastic.clients.elasticsearch._types.aggregations.MultiBucketBase;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 
 import static org.gbif.common.search.es.indexing.EsQueryUtils.extractFacetLimit;
@@ -80,6 +83,10 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
   private Buckets<? extends MultiBucketBase> getBuckets(Aggregate aggregate) {
     if (aggregate.isSterms()) {
       return aggregate.sterms().buckets();
+    } else if (aggregate.isLterms()) {
+      return aggregate.lterms().buckets();
+    } else if (aggregate.isDterms()) {
+      return aggregate.dterms().buckets();
     } else if (aggregate.isFilters()) {
       return aggregate.filters().buckets();
     } else {
@@ -109,12 +116,25 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
                                 buckets.array().stream()
                                     .skip(facetOffset)
                                     .limit(facetOffset + facetLimit)
-                                    .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(b.toString(), facet), b.docCount()))
+                                    .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(getBucketKey(agg.getValue(), b), facet), b.docCount()))
                                     .collect(Collectors.toList());
 
                             return new Facet<>(facet, counts);
                           })
                       .collect(Collectors.toList());
+  }
+
+  private static String getBucketKey(Aggregate aggregate, MultiBucketBase bucket) {
+    if (aggregate.isLterms()) {
+      return Long.toString(((LongTermsBucket)bucket).key());
+    }
+    if (aggregate.isDterms()) {
+      return Double.toString(((DoubleTermsBucket)bucket).key());
+    }
+    if (aggregate.isSterms()) {
+      return ((StringTermsBucket)bucket).key();
+    }
+    throw new IllegalArgumentException(aggregate.getClass() + " aggregation not supported");
   }
 
   private List<T> parseHits(

@@ -366,13 +366,12 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
               // build terms aggs and add it to the filter aggs
               TermsAggregation termsAggs =
                   buildTermsAggs(
-                      "filtered_" + esField,
                       esField,
                       extractFacetOffset(searchRequest, facetParam),
                       extractFacetLimit(searchRequest, facetParam),
                       searchRequest.getFacetMinCount());
 
-              facets.put(esField, Aggregation.of(ab -> ab.filters(filterAggs.build())
+              facets.put("filtered_" + esField, Aggregation.of(ab -> ab.filters(filterAggs.build())
                                     .aggregations("filtered_" + esField,
                                                   Aggregation.of(ta -> ta.terms(termsAggs)))));
 
@@ -388,19 +387,18 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       .forEach(
           facetParam -> {
             String esField = esFieldMapper.get(facetParam);
-            TermsAggregation ta = buildTermsAggs(esField, esField,
+            TermsAggregation ta = buildTermsAggs(esField,
                                                  extractFacetOffset(searchRequest, facetParam),
                                                  extractFacetLimit(searchRequest, facetParam),
                                                  searchRequest.getFacetMinCount());
-            facets.put(ta.name(), Aggregation.of(ab -> ab.terms(ta)));
+            facets.put(esField, Aggregation.of(ab -> ab.terms(ta)));
       });
      return facets;
   }
 
-  private TermsAggregation buildTermsAggs(
-      String aggregationName, String esField, int facetOffset, int facetLimit, Integer minCount) {
+  private TermsAggregation buildTermsAggs(String esField, int facetOffset, int facetLimit, Integer minCount) {
     // build aggs for the field
-    TermsAggregation.Builder builder = AggregationBuilders.terms().name(aggregationName).field(esField);
+    TermsAggregation.Builder builder = AggregationBuilders.terms().field(esField);
 
 
     // min count
