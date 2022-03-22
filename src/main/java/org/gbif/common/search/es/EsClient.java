@@ -23,6 +23,12 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.NodeSelector;
+import org.elasticsearch.client.RestClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -35,14 +41,8 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import jakarta.json.stream.JsonParser;
-import lombok.SneakyThrows;
-import org.apache.http.HttpHost;;
-import org.elasticsearch.client.NodeSelector;
-import org.elasticsearch.client.RestClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import lombok.Data;
+import lombok.SneakyThrows;
 
 /** Generic ElasticSearch wrapper client to encapsulate indexing and admin operations. */
 @Component

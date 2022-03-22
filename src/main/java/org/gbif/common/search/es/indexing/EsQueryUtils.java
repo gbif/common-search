@@ -31,11 +31,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
-
-import org.apache.http.entity.ContentType;
-import org.apache.http.protocol.HTTP;
-import org.elasticsearch.client.RequestOptions;
 
 import com.google.common.base.Strings;
 
@@ -193,14 +188,6 @@ public class EsQueryUtils {
         }
 
         return null;
-      };
-
-  // functions
-  public static final Supplier<RequestOptions> HEADERS =
-      () -> {
-        RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-        return builder.build();
       };
 
   public static <P extends SearchParameter> int extractFacetLimit(

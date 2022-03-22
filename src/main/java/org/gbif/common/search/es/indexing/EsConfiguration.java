@@ -15,42 +15,28 @@ package org.gbif.common.search.es.indexing;
 
 import org.gbif.common.search.es.EsClient;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+
 @Configuration
 public class EsConfiguration {
 
-  @ConfigurationProperties(prefix = "elasticsearch.registry")
-  @Bean("registryEsClientConfig")
-  @ConditionalOnProperty("elasticsearch.registry.enabled")
+  @ConfigurationProperties(prefix = "elasticsearch")
+  @ConditionalOnProperty("elasticsearch.enabled")
   @Primary
-  public EsClient.EsClientConfiguration registryEsClientConfiguration() {
+  public EsClient.EsClientConfiguration esClientConfiguration() {
     return new EsClient.EsClientConfiguration();
   }
 
   @Bean
   @Primary
-  public ElasticsearchClient restHighLevelClient(
-      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
+  public ElasticsearchClient restHighLevelClient(EsClient.EsClientConfiguration esClientConfiguration) {
     return EsClient.provideEsClient(esClientConfiguration);
   }
 
-  @ConfigurationProperties(prefix = "elasticsearch.occurrence")
-  @Bean("esOccurrenceClientConfig")
-  @ConditionalOnProperty("elasticsearch.occurrence.enabled")
-  public EsClient.EsClientConfiguration occurrenceEsClientConfiguration() {
-    return new EsClient.EsClientConfiguration();
-  }
-
-  @Bean(name = "occurrenceEsClient")
-  public ElasticsearchClient occurrenceRestHighLevelClient(
-      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
-    return EsClient.provideEsClient(esClientConfiguration);
-  }
 }

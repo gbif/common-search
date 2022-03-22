@@ -1,7 +1,17 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.common.search.test;
-
-import org.gbif.api.vocabulary.Country;
-import org.gbif.common.search.es.EsConversionUtils;
 
 import java.util.function.Function;
 
@@ -12,11 +22,6 @@ public class DataSearchResultConverter  implements Function<Hit<Data>,Data> {
 
   @Override
   public Data apply(Hit<Data> searchHit) {
-    Data.DataBuilder build = Data.builder();
-    EsConversionUtils.getIntValue(searchHit, "key").ifPresent(build::key);
-    EsConversionUtils.getStringValue(searchHit, "title").ifPresent(build::title);
-    EsConversionUtils.getDateValue(searchHit, "created").ifPresent(build::created);
-    EsConversionUtils.getEnumValue(Country.class, searchHit, "country").ifPresent(build::country);
-    return build.build();
+    return searchHit.source();
   }
 }
