@@ -13,16 +13,19 @@
  */
 package org.gbif.common.search.es;
 
-import java.io.BufferedInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Set;
 
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.json.jackson.JacksonJsonpGenerator;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.NodeSelector;
 import org.elasticsearch.client.RestClient;
@@ -49,6 +52,7 @@ import lombok.SneakyThrows;
 public class EsClient implements Closeable {
 
   private static final JacksonJsonpMapper MAPPER = new JacksonJsonpMapper();
+  private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
   @Data
   public static class EsClientConfiguration {
@@ -182,5 +186,17 @@ public class EsClient implements Closeable {
         throw new RuntimeException(ex);
       }
     }
+  }
+
+  @SneakyThrows
+  public static String printRequestAsJson(SearchRequest request) {
+    StringWriter jsonObjectWriter = new StringWriter();
+    JsonGenerator generator = JSON_FACTORY.createGenerator(jsonObjectWriter);
+    JacksonJsonpGenerator jacksonJsonpGenerator = new JacksonJsonpGenerator(generator);
+
+    request.serialize(jacksonJsonpGenerator, MAPPER);
+    jacksonJsonpGenerator.flush();
+
+    return jsonObjectWriter.toString();
   }
 }
