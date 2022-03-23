@@ -52,7 +52,6 @@ import lombok.SneakyThrows;
 public class EsClient implements Closeable {
 
   private static final JacksonJsonpMapper MAPPER = new JacksonJsonpMapper();
-  private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
   @Data
   public static class EsClientConfiguration {
@@ -189,9 +188,9 @@ public class EsClient implements Closeable {
   }
 
   @SneakyThrows
-  public static String printRequestAsJson(SearchRequest request) {
+  public static String prettyJsonRequest(SearchRequest request) {
     StringWriter jsonObjectWriter = new StringWriter();
-    JsonGenerator generator = JSON_FACTORY.createGenerator(jsonObjectWriter);
+    JsonGenerator generator = MAPPER.objectMapper().writerWithDefaultPrettyPrinter().createGenerator(jsonObjectWriter);
     JacksonJsonpGenerator jacksonJsonpGenerator = new JacksonJsonpGenerator(generator);
 
     request.serialize(jacksonJsonpGenerator, MAPPER);
