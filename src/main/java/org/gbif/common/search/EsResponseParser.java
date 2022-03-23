@@ -78,7 +78,6 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
     return response;
   }
 
-
   /** Extract the buckets of an {@link Aggregate}. */
   private Buckets<? extends MultiBucketBase> getBuckets(Aggregate aggregate) {
     if (aggregate.isSterms()) {
@@ -94,6 +93,10 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
     }
   }
 
+  private Buckets<? extends MultiBucketBase> getFilteredBuckets(String aggregateName, Aggregate aggregate) {
+    return getBuckets(aggregate.filter().aggregations().get("filtered_" + aggregateName));
+  }
+
   private List<Facet<P>> parseFacets(
     co.elastic.clients.elasticsearch.core.SearchResponse<SR> esResponse, FacetedSearchRequest<P> request) {
     return esResponse.aggregations()
@@ -103,10 +106,10 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
               agg ->
               {
                             // get buckets
-                            Buckets<? extends MultiBucketBase> buckets = getBuckets(agg.getValue());
+                            Buckets<? extends MultiBucketBase> buckets = agg.getValue().isFilter()? getFilteredBuckets(agg.getKey(), agg.getValue()): getBuckets(agg.getValue());
 
                             // get facet of the agg
-                            P facet = fieldParameterMapper.get(agg.getKey());
+                            P facet = fieldParameterMapper.get(agg.getKey().replaceFirst("filtered_",""));
 
                             // check for paging in facets
                             long facetOffset = extractFacetOffset(request, facet);
@@ -116,12 +119,17 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
                                 buckets.array().stream()
                                     .skip(facetOffset)
                                     .limit(facetOffset + facetLimit)
-                                    .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(getBucketKey(agg.getValue(), b), facet), b.docCount()))
+                                    .map(b -> new Facet.Count(fieldParameterMapper.parseIndexedValue(agg.getValue().isFilter()? getFilteredBucketKey(
+                                      agg.getKey(), agg.getValue(),b) : getBucketKey(agg.getValue(), b), facet), b.docCount()))
                                     .collect(Collectors.toList());
 
                             return new Facet<>(facet, counts);
                           })
                       .collect(Collectors.toList());
+  }
+
+  private static String getFilteredBucketKey(String aggName, Aggregate aggregate, MultiBucketBase bucket) {
+    return getBucketKey(aggregate.filter().aggregations().get("filtered_" + aggName), bucket);
   }
 
   private static String getBucketKey(Aggregate aggregate, MultiBucketBase bucket) {

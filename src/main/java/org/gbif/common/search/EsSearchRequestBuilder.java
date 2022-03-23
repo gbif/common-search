@@ -44,11 +44,11 @@ import org.locationtech.jts.io.WKTWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
 import co.elastic.clients.elasticsearch._types.ScoreSort;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.AggregationBuilders;
-import co.elastic.clients.elasticsearch._types.aggregations.FiltersAggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
@@ -363,7 +363,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
               String esField = esFieldMapper.get(facetParam);
 
 
-              FiltersAggregation.Builder filterAggs = AggregationBuilders.filters().name(esField).filters(b -> b.array(filter));
+              Query filterAggs = AggregationBuilders.filter().bool(b -> b.filter(filter)).build();
 
 
               // build terms aggs and add it to the filter aggs
@@ -374,8 +374,8 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                       extractFacetLimit(searchRequest, facetParam),
                       searchRequest.getFacetMinCount());
 
-              facets.put("filtered_" + esField, Aggregation.of(ab -> ab.filters(filterAggs.build())
-                                    .aggregations("filtered_" + esField,
+              facets.put(esField, Aggregation.of(ab -> ab.filter(filterAggs)
+                .aggregations("filtered_" + esField,
                                                   Aggregation.of(ta -> ta.terms(termsAggs)))));
 
             });
@@ -445,7 +445,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     List<Query> queries = new ArrayList<>();
     // collect queries for each value
-    List<String> parsedValues = new ArrayList<>();
+    List<FieldValue> parsedValues = new ArrayList<>();
     for (String value : values) {
       if (isRange(value)) {
         queries.add(new Query.Builder().range(buildRangeQuery(esField, value)).build());
@@ -459,7 +459,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       queries.add(new Query.Builder().term(t -> t.field(esField).value(parsedValues.get(0))).build());
     } else if (parsedValues.size() > 1) {
       // multi term query
-      parsedValues.forEach(pv -> queries.add(new Query.Builder().term(t -> t.field(esField).field(pv)).build()));
+      parsedValues.forEach(pv -> queries.add(new Query.Builder().term(t -> t.field(esField).value(pv)).build()));
     }
     return queries;
   }

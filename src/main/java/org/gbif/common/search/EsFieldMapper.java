@@ -19,6 +19,7 @@ import org.gbif.api.util.VocabularyUtils;
 import java.util.Collections;
 import java.util.List;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -57,16 +58,28 @@ public interface EsFieldMapper<P extends SearchParameter> {
    * @param parameter search parameter
    * @return parsed value
    */
-  default String parseParamValue(String value, P parameter) {
+  default FieldValue parseParamValue(String value, P parameter) {
     if (Enum.class.isAssignableFrom(parameter.type())) {
       return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
-        .map(Enum::name)
+        .map(e -> FieldValue.of(e.name()))
         .orElse(null);
     }
     if (Boolean.class.isAssignableFrom(parameter.type())) {
-      return value.toLowerCase();
+      return FieldValue.of(value.toLowerCase());
     }
-    return value;
+    if (Integer.class.isAssignableFrom(parameter.type())) {
+      return FieldValue.of(Integer.parseInt(value));
+    }
+    if (Long.class.isAssignableFrom(parameter.type())) {
+      return FieldValue.of(Long.parseLong(value));
+    }
+    if (Double.class.isAssignableFrom(parameter.type())) {
+      return FieldValue.of(Double.parseDouble(value));
+    }
+    if (Float.class.isAssignableFrom(parameter.type())) {
+      return FieldValue.of(Float.parseFloat(value));
+    }
+    return FieldValue.of(value);
   }
 
   /**
