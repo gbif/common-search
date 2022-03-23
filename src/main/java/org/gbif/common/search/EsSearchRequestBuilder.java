@@ -97,7 +97,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
             .type("unified")
             .requireFieldMatch(false)
             .numberOfFragments(0)
-            .fields(esFieldMapper.highlightingFields().stream().collect(Collectors.toMap(Function.identity(), k -> HighlightField.of(h -> h.field(k)))))
+            .fields(esFieldMapper.highlightingFields().stream().collect(Collectors.toMap(Function.identity(), k -> HighlightField.of(h -> h))))
             .build();
   }
   public SearchRequest buildSearchRequest(
