@@ -73,10 +73,10 @@ import static org.gbif.common.search.es.indexing.EsQueryUtils.extractFacetOffset
 
 public class EsSearchRequestBuilder<P extends SearchParameter> {
 
+  public static final String PRE_HL_TAG = "<em class=\"gbifHl\">";
+  public static final String POST_HL_TAG = "</em>";
   private static final int MAX_SIZE_TERMS_AGGS = 1200000;
   private static final IntUnaryOperator DEFAULT_SHARD_SIZE = size -> (size * 2) + 50000;
-  private static final String PRE_HL_TAG = "<em class=\"gbifHl\">";
-  private static final String POST_HL_TAG = "</em>";
 
   private EsFieldMapper<P> esFieldMapper;
 
