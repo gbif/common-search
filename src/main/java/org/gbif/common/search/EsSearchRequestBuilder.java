@@ -80,23 +80,23 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private EsFieldMapper<P> esFieldMapper;
 
-  // this instance is created only once and reused for all searches
-  private final Highlight.Builder highlightBuilder =
-      new Highlight.Builder()
-          .preTags(PRE_HL_TAG)
-          .postTags(POST_HL_TAG)
-          .encoder(HighlighterEncoder.Html)
-          .type("unified")
-          .requireFieldMatch(false)
-          .numberOfFragments(0);
-
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
   public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper) {
     this.esFieldMapper = esFieldMapper;
-    highlightBuilder.fields(esFieldMapper.highlightingFields().stream().collect(Collectors.toMap(Function.identity(), k -> HighlightField.of(h -> h.field(k)))));
   }
 
+  public Highlight highlight() {
+    return new Highlight.Builder()
+            .preTags(PRE_HL_TAG)
+            .postTags(POST_HL_TAG)
+            .encoder(HighlighterEncoder.Html)
+            .type("unified")
+            .requireFieldMatch(false)
+            .numberOfFragments(0)
+            .fields(esFieldMapper.highlightingFields().stream().collect(Collectors.toMap(Function.identity(), k -> HighlightField.of(h -> h.field(k)))))
+            .build();
+  }
   public SearchRequest buildSearchRequest(
     org.gbif.api.model.common.search.SearchRequest<P> searchRequest, String index) {
 
@@ -116,7 +116,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     } else {
       esRequest.sort(s -> s.score(new ScoreSort.Builder().build()));
       if (searchRequest.isHighlight()) {
-        esRequest.highlight(highlightBuilder.build());
+        esRequest.highlight(highlight());
       }
     }
 
@@ -151,7 +151,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     } else {
       esRequest.query( q ->  q.matchAll(new MatchAllQuery.Builder().build()));
       if (searchRequest.isHighlight()) {
-        esRequest.highlight(highlightBuilder.build());
+        esRequest.highlight(highlight());
       }
     }
 
