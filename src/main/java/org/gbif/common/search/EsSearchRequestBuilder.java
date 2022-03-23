@@ -80,13 +80,16 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private EsFieldMapper<P> esFieldMapper;
 
+  private final Highlight highlight;
+
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
   public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper) {
     this.esFieldMapper = esFieldMapper;
+    this.highlight = highlight();
   }
 
-  public Highlight highlight() {
+  private Highlight highlight() {
     return new Highlight.Builder()
             .preTags(PRE_HL_TAG)
             .postTags(POST_HL_TAG)
@@ -116,7 +119,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     } else {
       esRequest.sort(s -> s.score(new ScoreSort.Builder().build()));
       if (searchRequest.isHighlight()) {
-        esRequest.highlight(highlight());
+        esRequest.highlight(highlight);
       }
     }
 
@@ -151,7 +154,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     } else {
       esRequest.query( q ->  q.matchAll(new MatchAllQuery.Builder().build()));
       if (searchRequest.isHighlight()) {
-        esRequest.highlight(highlight());
+        esRequest.highlight(highlight);
       }
     }
 
