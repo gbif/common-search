@@ -412,11 +412,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     builder.size(size);
 
     // aggs shard size
-    /*
-    termsAggsBuilder.shardSize(
+    builder.shardSize(
         Optional.ofNullable(esFieldMapper.getCardinality(esField))
             .orElse(DEFAULT_SHARD_SIZE.applyAsInt(size)));
-    */
+
     return builder.build();
   }
 
