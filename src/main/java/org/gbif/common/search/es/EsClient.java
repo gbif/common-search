@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.NodeSelector;
@@ -145,23 +146,23 @@ public class EsClient implements Closeable {
     return elasticsearchClient.bulk(bulkRequest);
   }
 
+  private static HttpHost[] getHosts(EsClientConfiguration esClientConfiguration) {
+    return Stream.of(esClientConfiguration.hosts.split(","))
+                 .map(hostUrl -> {
+                                    try {
+                                      URL url = new URL(hostUrl);
+                                      return new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
+                                    } catch (MalformedURLException e) {
+                                      throw new IllegalArgumentException(hostUrl, e);
+                                    }
+                                 }).toArray(HttpHost[]::new);
+  }
+
   /** Creates ElasticSearch client using default connection settings. */
   public static ElasticsearchClient provideEsClient(EsClientConfiguration esClientConfiguration) {
-    String[] hostsUrl = esClientConfiguration.hosts.split(",");
-    HttpHost[] hosts = new HttpHost[hostsUrl.length];
-    int i = 0;
-    for (String host : hostsUrl) {
-      try {
-        URL url = new URL(host);
-        hosts[i] = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
-        i++;
-      } catch (MalformedURLException e) {
-        throw new IllegalArgumentException(e.getMessage(), e);
-      }
-    }
 
     return new ElasticsearchClient( new RestClientTransport(
-        RestClient.builder(hosts)
+        RestClient.builder(getHosts(esClientConfiguration))
             .setRequestConfigCallback(
                 requestConfigBuilder ->
                     requestConfigBuilder
