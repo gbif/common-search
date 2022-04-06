@@ -35,7 +35,7 @@
     <lombok.version>1.18.20</lombok.version>
 
     <!-- GBIF -->
-    <gbif-api.version>0.165</gbif-api.version>
+    <gbif-api.version>0.166</gbif-api.version>
 
     <!-- Libraries -->
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
