@@ -30,6 +30,7 @@ import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -254,13 +255,13 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     if (params != null && !params.isEmpty()) {
       // adding term queries to bool
-      bool.filter(fb -> {
+      bool.filter(
           params.entrySet().stream()
           .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
-          .forEach(e -> buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
-                        .forEach(a -> fb.term(a.term())));
-          return fb;
-        });
+          .map(e -> buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey())))
+          .filter(l -> !l.isEmpty())
+          .flatMap(List::stream).collect(Collectors.toList())
+        );
     }
 
     BoolQuery query  = bool.build();
@@ -436,9 +437,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private List<Query> buildTermQuery(Collection<String> values, P param, String esField) {
 
+    Query.Builder builder = new Query.Builder();
     if (esFieldMapper.isSpatialParameter(param)) {
       return values.stream()
-              .map(v -> new Query.Builder().geoShape(buildGeoShapeQuery(v, esField).build()).build())
+              .map(v -> builder.geoShape(buildGeoShapeQuery(v, esField).build()).build())
               .collect(Collectors.toList());
     }
 
@@ -458,7 +460,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       queries.add(new Query.Builder().term(t -> t.field(esField).value(parsedValues.get(0))).build());
     } else if (parsedValues.size() > 1) {
       // multi term query
-      parsedValues.forEach(pv -> queries.add(new Query.Builder().term(t -> t.field(esField).value(pv)).build()));
+      queries.add(new Query.Builder()
+                    .terms(t -> t.field(esField)
+                                 .terms(new TermsQueryField.Builder().value(parsedValues).build()))
+                    .build());
     }
     return queries;
   }
