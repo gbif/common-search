@@ -14,10 +14,12 @@
 package org.gbif.common.search;
 
 import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.model.common.search.SearchRequest;
 import org.gbif.api.util.VocabularyUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
@@ -135,10 +137,21 @@ public interface EsFieldMapper<P extends SearchParameter> {
     return Collections.emptyList();
   }
 
-
   /** Builds a full text search query builder. */
   default Query fullTextQuery(String q) {
     return Query.of(b -> b.match(QueryBuilders.match().field("all").query(q).build()));
+  }
+
+  /** Builds a full text search query builder where we can specify the fields to use in the query. */
+  default Query fullTextQuery(String q, Set<SearchRequest.QueryField> queryFields) {
+    return Query.of(b -> b.multiMatch(QueryBuilders.multiMatch()
+                                        .fields(queryFieldsToEsFields(queryFields))
+                                        .query(q)
+                                        .build()));
+  }
+
+  default List<String> queryFieldsToEsFields(Set<SearchRequest.QueryField> queryFields) {
+    return Collections.emptyList();
   }
 
   default boolean isSpatialParameter(P parameter) {

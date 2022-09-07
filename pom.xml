@@ -35,7 +35,7 @@
     <lombok.version>1.18.20</lombok.version>
 
     <!-- GBIF -->
-    <gbif-api.version>0.166</gbif-api.version>
+    <gbif-api.version>0.170-SNAPSHOT</gbif-api.version>
 
     <!-- Libraries -->
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
@@ -63,7 +63,7 @@
   <repositories>
     <repository>
       <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
+      <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
   </repositories>
 

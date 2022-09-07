@@ -64,6 +64,7 @@ import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
 import co.elastic.clients.json.JsonData;
 
+import static org.gbif.api.model.common.search.SearchRequest.*;
 import static org.gbif.api.util.SearchTypeValidator.isRange;
 import static org.gbif.common.search.es.indexing.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
 import static org.gbif.common.search.es.indexing.EsQueryUtils.RANGE_SEPARATOR;
@@ -126,9 +127,9 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // add query
     if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) { // Is a search all
-      esRequest.query( q ->  q.matchAll(new MatchAllQuery.Builder().build()));
+      esRequest.query(q -> q.matchAll(new MatchAllQuery.Builder().build()));
     } else {
-      buildQuery(searchRequest.getParameters(), searchRequest.getQ())
+      buildQuery(searchRequest.getParameters(), searchRequest.getQ(), searchRequest.getQFields())
         .ifPresent(q -> esRequest.query(new Query.Builder().bool(q).build()));
     }
 
@@ -166,7 +167,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) { // Is a search all
       esRequest.query( q ->  q.matchAll(new MatchAllQuery.Builder().build()));
     } else {
-      buildQuery(groupedParams.queryParams, searchRequest.getQ())
+      buildQuery(groupedParams.queryParams, searchRequest.getQ(), searchRequest.getQFields())
           .ifPresent(b -> esRequest.query(new Query.Builder().bool(b).build()));
     }
 
@@ -184,12 +185,12 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   public Optional<BoolQuery> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
-    return buildQuery(searchRequest.getParameters(), searchRequest.getQ());
+    return buildQuery(searchRequest.getParameters(), searchRequest.getQ(), searchRequest.getQFields());
   }
 
   public SearchRequest buildAutocompleteQuery(
       org.gbif.api.model.common.search.SearchRequest<P> searchRequest, P parameter, String index) {
-    Optional<BoolQuery> filterQuery = buildQuery(searchRequest.getParameters(), null);
+    Optional<BoolQuery> filterQuery = buildQuery(searchRequest.getParameters(), null, null);
 
     BoolQuery.Builder query = QueryBuilders.bool();
 
@@ -244,13 +245,17 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return request.build();
   }
 
-  private Optional<BoolQuery> buildQuery(Map<P, Set<String>> params, String qParam) {
+  private Optional<BoolQuery> buildQuery(Map<P, Set<String>> params, String qParam, Set<QueryField> queryFields) {
     // create bool node
     BoolQuery.Builder bool = QueryBuilders.bool();
 
     // adding full text search parameter
     if (!Strings.isNullOrEmpty(qParam)) {
-      bool.must(esFieldMapper.fullTextQuery(qParam));
+      if (queryFields == null || queryFields.isEmpty()) {
+        bool.must(esFieldMapper.fullTextQuery(qParam));
+      } else {
+        bool.must(esFieldMapper.fullTextQuery(qParam, queryFields));
+      }
     }
 
     if (params != null && !params.isEmpty()) {
