@@ -59,7 +59,7 @@ public class EsClient implements Closeable {
     private int connectionTimeOut;
     private int socketTimeOut;
     private int connectionRequestTimeOut;
-    private boolean enabled = false;
+    private boolean enabled = true;
   }
 
   private final ElasticsearchClient elasticsearchClient;
