@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
@@ -58,6 +59,7 @@ public class EsClient implements Closeable {
     private int connectionTimeOut;
     private int socketTimeOut;
     private int connectionRequestTimeOut;
+    private boolean enabled = false;
   }
 
   private final ElasticsearchClient elasticsearchClient;
@@ -160,18 +162,27 @@ public class EsClient implements Closeable {
 
   /** Creates ElasticSearch client using default connection settings. */
   public static ElasticsearchClient provideEsClient(EsClientConfiguration esClientConfiguration) {
+    return provideEsClient(esClientConfiguration, new JacksonJsonpMapper());
+  }
 
+  /** Creates ElasticSearch client using default connection settings and using a custom Jackson ObjectMapper. */
+  public static ElasticsearchClient provideEsClient(EsClientConfiguration esClientConfiguration, ObjectMapper objectMapper) {
+    return provideEsClient(esClientConfiguration, new JacksonJsonpMapper(objectMapper));
+  }
+
+  /** Creates ElasticSearch client using default connection settings and using a custom JacksonJsonpMapper. */
+  public static ElasticsearchClient provideEsClient(EsClientConfiguration esClientConfiguration, JacksonJsonpMapper jacksonJsonpMapper) {
     return new ElasticsearchClient( new RestClientTransport(
-        RestClient.builder(getHosts(esClientConfiguration))
-            .setRequestConfigCallback(
-                requestConfigBuilder ->
-                    requestConfigBuilder
-                        .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
-                        .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
-                        .setConnectionRequestTimeout(
-                            esClientConfiguration.getConnectionRequestTimeOut()))
-            .setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS)
-          .build(), new JacksonJsonpMapper()));
+      RestClient.builder(getHosts(esClientConfiguration))
+        .setRequestConfigCallback(
+          requestConfigBuilder ->
+            requestConfigBuilder
+              .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
+              .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
+              .setConnectionRequestTimeout(
+                esClientConfiguration.getConnectionRequestTimeOut()))
+        .setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS)
+        .build(), jacksonJsonpMapper));
   }
 
   @Override
