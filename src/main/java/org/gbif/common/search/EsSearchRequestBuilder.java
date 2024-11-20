@@ -65,7 +65,8 @@ import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
 import co.elastic.clients.json.JsonData;
 
 import static org.gbif.api.model.common.search.SearchRequest.*;
-import static org.gbif.api.util.SearchTypeValidator.isRange;
+import static org.gbif.api.util.SearchTypeValidator.isDateRange;
+import static org.gbif.api.util.SearchTypeValidator.isNumericRange;
 import static org.gbif.common.search.es.indexing.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
 import static org.gbif.common.search.es.indexing.EsQueryUtils.RANGE_SEPARATOR;
 import static org.gbif.common.search.es.indexing.EsQueryUtils.RANGE_WILDCARD;
@@ -453,7 +454,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     // collect queries for each value
     List<FieldValue> parsedValues = new ArrayList<>();
     for (String value : values) {
-      if (isRange(value)) {
+      if (isNumericRange(value) || isDateRange(value)) {
         queries.add(new Query.Builder().range(buildRangeQuery(esField, value)).build());
         continue;
       }
