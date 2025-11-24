@@ -278,7 +278,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
     GroupedParams groupedParams = new GroupedParams<P>();
 
-    if (!searchRequest.isMultiSelectFacets()
+    if (!searchRequest.isFacetMultiSelect()
         || searchRequest.getFacets() == null
         || searchRequest.getFacets().isEmpty()) {
       groupedParams.queryParams = searchRequest.getParameters();
@@ -332,7 +332,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       return Optional.empty();
     }
 
-    if (searchRequest.isMultiSelectFacets()
+    if (searchRequest.isFacetMultiSelect()
         && postFilterParams != null
         && !postFilterParams.isEmpty()) {
       return Optional.of(buildFacetsMultiselect(searchRequest, postFilterParams));
@@ -454,7 +454,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     // collect queries for each value
     List<FieldValue> parsedValues = new ArrayList<>();
     for (String value : values) {
-      if (isNumericRange(value) || isDateRange(value)) {
+      if (isNumericRange(value) || isDateRange(value) && value.contains(RANGE_SEPARATOR)) {
         queries.add(new Query.Builder().range(buildRangeQuery(esField, value)).build());
         continue;
       }
