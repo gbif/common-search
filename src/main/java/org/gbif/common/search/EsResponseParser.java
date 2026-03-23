@@ -140,7 +140,7 @@ public class EsResponseParser<T,SR, P extends SearchParameter> {
       return Double.toString(((DoubleTermsBucket)bucket).key());
     }
     if (aggregate.isSterms()) {
-      return ((StringTermsBucket)bucket).key();
+      return ((StringTermsBucket) bucket).key().stringValue();
     }
     throw new IllegalArgumentException(aggregate.getClass() + " aggregation not supported");
   }
