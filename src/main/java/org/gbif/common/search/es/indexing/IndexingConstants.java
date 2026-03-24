@@ -15,6 +15,7 @@ package org.gbif.common.search.es.indexing;
 
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.elasticsearch.indices.TranslogDurability;
 import lombok.experimental.UtilityClass;
 
 /** Constants used for indexing into Elastisearch. */
@@ -27,14 +28,14 @@ public class IndexingConstants {
                                                                   .settings(idx -> idx.refreshInterval(Time.of(t -> t.time("-1")))
                                                                     .numberOfReplicas("0")
                                                                     .numberOfShards("1")
-                                                                    .translog(tl -> tl.durability("async")))
+                                                                    .translog(tl -> tl.durability(TranslogDurability.Async)))
                                                                   .build();
 
   /** Default/recommended setting for search/production mode. */
   public static final IndexSettings DEFAULT_SEARCH_SETTINGS = new IndexSettings.Builder()
     .settings(idx -> idx.refreshInterval(Time.of(t -> t.time("1s")))
       .numberOfReplicas("1")
-      .translog(tl -> tl.durability("async")))
+      .translog(tl -> tl.durability(TranslogDurability.Async)))
     .build();
 
 }

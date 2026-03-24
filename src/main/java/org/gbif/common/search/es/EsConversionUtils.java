@@ -29,13 +29,15 @@ import java.util.stream.Collectors;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
 import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.gbif.common.search.es.indexing.EsQueryUtils.STRING_TO_DATE;
 
 @UtilityClass
-@Slf4j
 public class EsConversionUtils {
+
+  private static final Logger LOG = LoggerFactory.getLogger(EsConversionUtils.class);
 
   private static final Pattern NESTED_PATTERN = Pattern.compile("^\\w+(\\.\\w+)+$");
   private static final Predicate<String> IS_NESTED = s -> NESTED_PATTERN.matcher(s).find();
@@ -125,7 +127,7 @@ public class EsConversionUtils {
           try {
             return mapper.apply(v);
           } catch (Exception ex) {
-            log.error("Error extracting field {} with value {}", fieldName, v);
+            LOG.error("Error extracting field {} with value {}", fieldName, v);
             return null;
           }
         });
