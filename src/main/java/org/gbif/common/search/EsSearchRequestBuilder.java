@@ -18,6 +18,7 @@ import org.gbif.api.model.common.search.SearchConstants;
 import org.gbif.api.model.common.search.SearchParameter;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,6 +64,7 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
 import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.NamedValue;
 
 import static org.gbif.api.model.common.search.SearchRequest.*;
 import static org.gbif.api.util.SearchTypeValidator.isDateRange;
@@ -100,7 +102,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
             .type("unified")
             .requireFieldMatch(false)
             .numberOfFragments(0)
-            .fields(esFieldMapper.highlightingFields().stream().collect(Collectors.toMap(Function.identity(), k -> HighlightField.of(h -> h))))
+            .fields(
+                esFieldMapper.highlightingFields().stream()
+                    .map(field -> NamedValue.of(field, HighlightField.of(h -> h)))
+                    .collect(Collectors.toList()))
             .build();
   }
   public SearchRequest buildSearchRequest(
@@ -235,9 +240,11 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // create suggest query
     request.suggest(s -> s
-      .suggesters(esField, fs ->  fs.completion(cs -> cs.prefix(prefix)
-                                                        .size(limit != null ? limit : SearchConstants.DEFAULT_SUGGEST_LIMIT)
-                                                        .skipDuplicates(true))));
+      .suggesters(esField, fs -> fs
+          .prefix(prefix)
+          .completion(cs -> cs
+              .size(limit != null ? limit : SearchConstants.DEFAULT_SUGGEST_LIMIT)
+              .skipDuplicates(true))));
 
     // add source field
     request.source(s -> s.filter(f -> f.excludes(esFieldMapper.excludeFields())
@@ -278,7 +285,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
     GroupedParams groupedParams = new GroupedParams<P>();
 
-    if (!searchRequest.isMultiSelectFacets()
+    if (!searchRequest.isFacetMultiSelect()
         || searchRequest.getFacets() == null
         || searchRequest.getFacets().isEmpty()) {
       groupedParams.queryParams = searchRequest.getParameters();
@@ -332,7 +339,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       return Optional.empty();
     }
 
-    if (searchRequest.isMultiSelectFacets()
+    if (searchRequest.isFacetMultiSelect()
         && postFilterParams != null
         && !postFilterParams.isEmpty()) {
       return Optional.of(buildFacetsMultiselect(searchRequest, postFilterParams));
@@ -475,30 +482,42 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   private RangeQuery buildRangeQuery(String esField, String value) {
-    RangeQuery.Builder builder = QueryBuilders.range().field(esField);
-
     if (esFieldMapper.isDateField(esField)) {
       String[] values = value.split(RANGE_SEPARATOR);
+      return RangeQuery.of(
+          r ->
+              r.date(
+                  d -> {
+                    d.field(esField);
 
-      LocalDateTime lowerBound = LOWER_BOUND_RANGE_PARSER.apply(values[0]);
-      if (lowerBound != null) {
-        builder.gte(JsonData.of(lowerBound));
-      }
+                    LocalDateTime lowerBound = LOWER_BOUND_RANGE_PARSER.apply(values[0]);
+                    if (lowerBound != null) {
+                      d.gte(lowerBound.toString());
+                    }
 
-      LocalDateTime upperBound = UPPER_BOUND_RANGE_PARSER.apply(values[1]);
-      if (upperBound != null) {
-        builder.lte(JsonData.of(upperBound));
-      }
-    } else {
-      String[] values = value.split(RANGE_SEPARATOR);
-      if (!RANGE_WILDCARD.equals(values[0])) {
-        builder.gte(JsonData.of(values[0]));
-      }
-      if (!RANGE_WILDCARD.equals(values[1])) {
-        builder.lte(JsonData.of(values[1]));
-      }
+                    LocalDateTime upperBound = UPPER_BOUND_RANGE_PARSER.apply(values[1]);
+                    if (upperBound != null) {
+                      d.lte(upperBound.toString());
+                    }
+
+                    return d;
+                  }));
     }
-    return builder.build();
+
+    String[] values = value.split(RANGE_SEPARATOR);
+    return RangeQuery.of(
+        r ->
+            r.untyped(
+                u -> {
+                  u.field(esField);
+                  if (!RANGE_WILDCARD.equals(values[0])) {
+                    u.gte(JsonData.of(new BigDecimal(values[0])));
+                  }
+                  if (!RANGE_WILDCARD.equals(values[1])) {
+                    u.lte(JsonData.of(new BigDecimal(values[1])));
+                  }
+                  return u;
+                }));
   }
 
   private static LinearRing[] holes(Polygon polygon) {

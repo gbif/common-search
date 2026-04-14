@@ -88,7 +88,7 @@ public class EsClient implements Closeable {
           elasticsearchClient
             .indices()
             .getAlias(new GetAliasRequest.Builder().name(alias).allowNoIndices(true).build());
-        Set<String> idxsToDelete = getAliasesResponse.result().keySet();
+        Set<String> idxsToDelete = getAliasesResponse.aliases().keySet();
 
         elasticsearchClient
           .indices()
@@ -177,10 +177,10 @@ public class EsClient implements Closeable {
         .setRequestConfigCallback(
           requestConfigBuilder ->
             requestConfigBuilder
-              .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
-              .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
+              .setConnectTimeout(esClientConfiguration.connectionTimeOut)
+              .setSocketTimeout(esClientConfiguration.socketTimeOut)
               .setConnectionRequestTimeout(
-                esClientConfiguration.getConnectionRequestTimeOut()))
+                esClientConfiguration.connectionRequestTimeOut))
         .setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS)
         .build(), jacksonJsonpMapper));
   }
