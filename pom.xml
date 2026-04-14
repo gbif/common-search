@@ -13,7 +13,7 @@
   <packaging>jar</packaging>
 
   <name>GBIF Common :: Search</name>
-  <url>http://github.org/gbif/common-search</url>
+  <url>https://github.org/gbif/common-search</url>
 
   <scm>
     <connection>scm:git:git@github.com:gbif/common-search.git</connection>
