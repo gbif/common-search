@@ -25,7 +25,7 @@
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <url>http://gbif.github.io/common-search/</url>
+      <url>https://gbif.github.io/common-search/</url>
     </site>
     <repository>
       <id>gbif-release</id>
